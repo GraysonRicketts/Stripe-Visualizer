@@ -27,7 +27,6 @@ function formatValue(value: unknown, depth = 0): string {
 }
 
 function JsonLine({ text }: { text: string }) {
-  // Simple colorize
   const colored = text
     .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
     .replace(/: "([^"]*)"(,?)$/g, ': <span class="json-string">"$1"</span>$2')
@@ -39,23 +38,18 @@ function JsonLine({ text }: { text: string }) {
 }
 
 export function PayloadDrawer() {
-  const { selectedNodeId, selectNode, scenario, completedSteps, activeStep, failedStep } = usePaymentStore()
+  const { selectedNodeId, scenario, completedSteps, drawerOpen, closeDrawer } = usePaymentStore()
 
   const stepIndex = selectedNodeId ? STEP_NODE_IDS.indexOf(selectedNodeId) : -1
-  const isVisible =
-    stepIndex !== -1 &&
-    (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex)
-
   const payload = stepIndex >= 0 ? getPayload(stepIndex, scenario) : null
 
   const formatted = payload
-    ? formatValue(payload.data)
-        .split('\n')
+    ? formatValue(payload.data).split('\n')
     : []
 
   return (
     <AnimatePresence>
-      {isVisible && payload && (
+      {drawerOpen && payload && (
         <motion.div
           key={selectedNodeId}
           initial={{ x: '100%', opacity: 0 }}
@@ -74,11 +68,16 @@ export function PayloadDrawer() {
               </div>
             </div>
             <button
-              onClick={() => selectNode(null)}
+              onClick={closeDrawer}
               className="text-slate-600 hover:text-slate-300 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+
+          {/* Description */}
+          <div className="px-4 py-3 border-b border-[#1a1b2e] bg-[#0a0b14]/60">
+            <p className="text-xs text-slate-400 leading-relaxed">{payload.description}</p>
           </div>
 
           {/* JSON body */}

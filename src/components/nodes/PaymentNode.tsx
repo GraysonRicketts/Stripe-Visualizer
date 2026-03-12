@@ -126,6 +126,12 @@ export function PaymentNode({ data }: PaymentNodeProps) {
           className="!bg-transparent !border-0 !w-0 !h-0"
         />
       )}
+      <Handle
+        id="right"
+        type="source"
+        position={Position.Right}
+        className="!bg-transparent !border-0 !w-0 !h-0"
+      />
     </div>
   )
 }
