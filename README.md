@@ -32,14 +32,6 @@ npm run build
 3. Click **Pay** to animate the payment flow
 4. Click any node to inspect the Stripe API payload for that step
 
-### Test Cards
-
-| Scenario | Card Number |
-|----------|-------------|
-| Success  | `4242 4242 4242 4242` |
-| Declined | `4000 0000 0000 0002` |
-| Fraud    | `4100 0000 0000 0019` |
-
 ## Stack
 
 - [React](https://react.dev/) + [Vite](https://vite.dev/)
