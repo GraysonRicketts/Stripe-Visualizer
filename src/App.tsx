@@ -1,7 +1,6 @@
 import { CheckoutPanel } from './components/CheckoutPanel'
 import { FlowGraph } from './components/FlowGraph'
 import { PayloadDrawer } from './components/PayloadDrawer'
-import { EventLog } from './components/EventLog'
 
 export default function App() {
   return (
@@ -18,9 +17,6 @@ export default function App() {
         </div>
         <div className="h-4 w-px bg-[#1a1b2e]" />
         <span className="text-slate-600 text-xs">Stripe infrastructure simulation</span>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-[10px] text-slate-700 font-mono bg-[#12131e] border border-[#1a1b2e] px-2 py-0.5 rounded">test mode</span>
-        </div>
       </div>
 
       {/* Main content */}
@@ -35,11 +31,6 @@ export default function App() {
           <FlowGraph />
           <PayloadDrawer />
         </div>
-      </div>
-
-      {/* Bottom: Event Log */}
-      <div className="h-[90px] flex-shrink-0">
-        <EventLog />
       </div>
     </div>
   )
