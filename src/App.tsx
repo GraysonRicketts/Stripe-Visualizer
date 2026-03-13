@@ -1,6 +1,7 @@
 import { CheckoutPanel } from './components/CheckoutPanel'
 import { FlowGraph } from './components/FlowGraph'
 import { PayloadDrawer } from './components/PayloadDrawer'
+import { TimelineBar } from './components/TimelineBar'
 
 export default function App() {
   return (
@@ -18,6 +19,9 @@ export default function App() {
         <div className="h-4 w-px bg-[#1a1b2e]" />
         <span className="text-slate-600 text-xs">Stripe infrastructure simulation</span>
       </div>
+
+      {/* Timeline bar */}
+      <TimelineBar />
 
       {/* Main content */}
       <div className="flex flex-1 min-h-0">

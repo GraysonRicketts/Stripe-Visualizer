@@ -21,7 +21,9 @@ interface PaymentStore {
   drawerOpen: boolean
 
   setScenario: (s: Scenario) => void
-  startPayment: () => void
+  play: (fromStep: number) => void
+  stopPlay: () => void
+  jumpToStep: (step: number) => void
   reset: () => void
   selectNode: (id: string | null) => void
   openDrawer: () => void
@@ -69,6 +71,13 @@ export const STEP_NODE_IDS = [
   'payout',
 ]
 
+// Module-level timeout tracking so we can cancel in-flight play
+let activeTimeouts: ReturnType<typeof setTimeout>[] = []
+function clearAllTimeouts() {
+  activeTimeouts.forEach(clearTimeout)
+  activeTimeouts = []
+}
+
 export const usePaymentStore = create<PaymentStore>((set, get) => ({
   scenario: 'success',
   activeStep: -1,
@@ -77,7 +86,7 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
   status: 'idle',
   selectedNodeId: null,
   events: [],
-  drawerOpen: false,
+  drawerOpen: true,
 
   setScenario: (scenario) => {
     const { status } = get()
@@ -86,6 +95,7 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
   },
 
   reset: () => {
+    clearAllTimeouts()
     set({
       activeStep: -1,
       completedSteps: new Set(),
@@ -93,29 +103,46 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
       status: 'idle',
       selectedNodeId: null,
       events: [],
-      drawerOpen: false,
+      drawerOpen: true,
     })
   },
 
-  selectNode: (id) => set({ selectedNodeId: id }),
-  openDrawer: () => set({ drawerOpen: true }),
-  closeDrawer: () => set({ drawerOpen: false }),
+  stopPlay: () => {
+    clearAllTimeouts()
+    set({ status: 'idle' })
+  },
 
-  startPayment: () => {
+  jumpToStep: (step: number) => {
+    clearAllTimeouts()
+    const preCompleted = new Set(Array.from({ length: step }, (_, i) => i))
+    set({
+      status: 'idle',
+      activeStep: -1,
+      completedSteps: preCompleted,
+      failedStep: -1,
+      selectedNodeId: STEP_NODE_IDS[step],
+      drawerOpen: true,
+    })
+  },
+
+  play: (fromStep: number) => {
     const { status, scenario } = get()
     if (status === 'running') return
+
+    clearAllTimeouts()
+
+    const preCompleted = new Set(Array.from({ length: fromStep }, (_, i) => i))
+    const failStep = SCENARIO_FAIL_STEP[scenario]
+    const eventList = scenario === 'fraud' ? FRAUD_EVENTS : scenario === 'declined' ? DECLINED_EVENTS : STEP_EVENTS
 
     set({
       status: 'running',
       activeStep: -1,
-      completedSteps: new Set(),
+      completedSteps: preCompleted,
       failedStep: -1,
       selectedNodeId: null,
       events: [],
     })
-
-    const failStep = SCENARIO_FAIL_STEP[scenario]
-    const eventList = scenario === 'fraud' ? FRAUD_EVENTS : scenario === 'declined' ? DECLINED_EVENTS : STEP_EVENTS
 
     const runStep = (step: number) => {
       if (step > 7) {
@@ -123,10 +150,9 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
         return
       }
 
-      // Set this step as active
       set({ activeStep: step, selectedNodeId: STEP_NODE_IDS[step] })
 
-      setTimeout(() => {
+      const t1 = setTimeout(() => {
         const eventDef = eventList[step]
         if (eventDef) {
           set((state) => ({
@@ -152,10 +178,18 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
           activeStep: -1,
         }))
 
-        setTimeout(() => runStep(step + 1), STEP_PAUSE)
+        const t2 = setTimeout(() => runStep(step + 1), STEP_PAUSE)
+        activeTimeouts.push(t2)
       }, STEP_DURATION)
+
+      activeTimeouts.push(t1)
     }
 
-    setTimeout(() => runStep(0), 300)
+    const t0 = setTimeout(() => runStep(fromStep), 300)
+    activeTimeouts.push(t0)
   },
+
+  selectNode: (id) => set({ selectedNodeId: id, drawerOpen: id !== null }),
+  openDrawer: () => set({ drawerOpen: true }),
+  closeDrawer: () => set({ drawerOpen: false }),
 }))

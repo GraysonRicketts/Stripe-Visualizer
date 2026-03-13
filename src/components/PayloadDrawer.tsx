@@ -49,62 +49,72 @@ export function PayloadDrawer() {
 
   return (
     <AnimatePresence>
-      {drawerOpen && payload && (
+      {drawerOpen && (
         <motion.div
-          key={selectedNodeId}
           initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           className="absolute top-0 right-0 h-full w-[340px] bg-[#0c0d18] border-l border-[#1a1b2e] flex flex-col z-10 shadow-2xl"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1b2e]">
-            <div className="flex items-center gap-2">
-              <Code2 className="w-4 h-4 text-[#635bff]" />
-              <div>
-                <div className="text-sm font-semibold text-white">{payload.title}</div>
-                <div className="text-[10px] text-slate-600 font-mono">{payload.object}</div>
+          {payload ? (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1b2e]">
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-4 h-4 text-[#635bff]" />
+                  <div>
+                    <div className="text-lg font-semibold text-white">{payload.title}</div>
+                    <div className="text-md text-slate-600 font-mono">{payload.object}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={closeDrawer}
+                  className="text-slate-600 hover:text-slate-300 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            </div>
-            <button
-              onClick={closeDrawer}
-              className="text-slate-600 hover:text-slate-300 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
 
-          {/* Description */}
-          <div className="px-4 py-3 border-b border-[#1a1b2e] bg-[#0a0b14]/60">
-            <p className="text-xs text-slate-400 leading-relaxed">{payload.description}</p>
-          </div>
+              {/* Description */}
+              <div className="px-4 py-3 border-b border-[#1a1b2e] bg-[#0a0b14]/60">
+                <p className="text-lg text-slate-400 leading-relaxed">{payload.description}</p>
+              </div>
 
-          {/* JSON body */}
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            <pre className="text-[11px] font-mono leading-relaxed text-slate-400 whitespace-pre">
-              {formatted.map((line, i) => (
-                <JsonLine key={i} text={line} />
-              ))}
-            </pre>
-          </div>
+              {/* JSON body */}
+              <div className="flex-1 overflow-y-auto px-4 py-3">
+                <pre className="text-sm font-mono leading-relaxed text-slate-400 whitespace-pre">
+                  {formatted.map((line, i) => (
+                    <JsonLine key={i} text={line} />
+                  ))}
+                </pre>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1b2e]">
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-4 h-4 text-[#635bff]" />
+                  <span className="text-sm font-semibold text-white">API Payload</span>
+                </div>
+                <button
+                  onClick={closeDrawer}
+                  className="text-slate-600 hover:text-slate-300 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
-          {/* Step indicator */}
-          <div className="px-4 py-3 border-t border-[#1a1b2e] flex items-center gap-2">
-            <div className="flex gap-1">
-              {STEP_NODE_IDS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === stepIndex ? 'w-4 bg-[#635bff]' : completedSteps.has(i) ? 'w-2 bg-[#00d4a0]/60' : 'w-2 bg-[#1e2235]'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-xs text-slate-600 ml-1">
-              Step {stepIndex + 1} of {STEP_NODE_IDS.length}
-            </span>
-          </div>
+              {/* Placeholder */}
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                <Code2 className="w-8 h-8 text-slate-700" />
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Click any active node to inspect its API payload
+                </p>
+              </div>
+            </>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

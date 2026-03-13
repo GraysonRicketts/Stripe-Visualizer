@@ -31,7 +31,7 @@ interface PaymentNodeProps {
 }
 
 export function PaymentNode({ data }: PaymentNodeProps) {
-  const { activeStep, completedSteps, failedStep, status, selectNode } = usePaymentStore()
+  const { activeStep, completedSteps, failedStep, status } = usePaymentStore()
   const { label, sublabel, stepIndex, icon } = data
 
   const isActive = activeStep === stepIndex
@@ -76,9 +76,7 @@ export function PaymentNode({ data }: PaymentNodeProps) {
     <div
       className={`relative w-[260px] rounded-xl border ${borderColor} ${bgColor} px-4 py-3 transition-all duration-300 ${clickable ? 'cursor-pointer hover:brightness-110' : 'cursor-default'}`}
       style={{ ...glowStyle, ...animStyle }}
-      onClick={() => {
-        if (clickable) selectNode(STEP_NODE_IDS[stepIndex])
-      }}
+
     >
       {!isFirst && (
         <Handle
@@ -126,12 +124,6 @@ export function PaymentNode({ data }: PaymentNodeProps) {
           className="!bg-transparent !border-0 !w-0 !h-0"
         />
       )}
-      <Handle
-        id="right"
-        type="source"
-        position={Position.Right}
-        className="!bg-transparent !border-0 !w-0 !h-0"
-      />
     </div>
   )
 }

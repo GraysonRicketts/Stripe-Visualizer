@@ -12,26 +12,15 @@ import '@xyflow/react/dist/style.css'
 import { usePaymentStore, STEP_NODE_IDS } from '../store/paymentStore'
 import { FLOW_NODES, FLOW_EDGES } from '../data/flowLayout'
 import { PaymentNode } from './nodes/PaymentNode'
-import { PayloadPreviewNode } from './nodes/PayloadPreviewNode'
 
 const nodeTypes: NodeTypes = {
   paymentNode: PaymentNode as unknown as NodeTypes[string],
-  payloadPreviewNode: PayloadPreviewNode as unknown as NodeTypes[string],
 }
 
-const PREVIEW_NODE: Node = {
-  id: 'payload-preview',
-  type: 'payloadPreviewNode',
-  position: { x: 360, y: 390 },
-  data: {},
-  selectable: false,
-  draggable: false,
-}
-
-const ALL_NODES: Node[] = [...(FLOW_NODES as Node[]), PREVIEW_NODE]
+const ALL_NODES: Node[] = FLOW_NODES as Node[]
 
 export function FlowGraph() {
-  const { activeStep, completedSteps, failedStep, selectedNodeId } = usePaymentStore()
+  const { activeStep, completedSteps, failedStep, selectNode } = usePaymentStore()
 
   const edges = useMemo<Edge[]>(() => {
     const result: Edge[] = FLOW_EDGES.map((edge) => {
@@ -79,37 +68,8 @@ export function FlowGraph() {
       }
     })
 
-    // Dynamic edge from selected node to preview node
-    if (selectedNodeId) {
-      const stepIndex = STEP_NODE_IDS.indexOf(selectedNodeId)
-      const isReached =
-        stepIndex !== -1 &&
-        (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex)
-
-      if (isReached) {
-        result.push({
-          id: 'e-preview',
-          source: selectedNodeId,
-          sourceHandle: 'right',
-          target: 'payload-preview',
-          animated: activeStep === stepIndex || false,
-          style: {
-            stroke: '#635bff',
-            strokeWidth: 1.5,
-            transition: 'stroke 0.4s ease',
-          },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#635bff',
-            width: 12,
-            height: 12,
-          },
-        })
-      }
-    }
-
     return result
-  }, [activeStep, completedSteps, failedStep, selectedNodeId])
+  }, [activeStep, completedSteps, failedStep])
 
   return (
     <div className="w-full h-full">
@@ -123,6 +83,12 @@ export function FlowGraph() {
         nodesConnectable={false}
         elementsSelectable={false}
         panOnDrag={true}
+        onNodeClick={(_, node) => {
+          const stepIndex = STEP_NODE_IDS.indexOf(node.id)
+          if (stepIndex === -1) return
+          const clickable = completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex
+          if (clickable) selectNode(node.id)
+        }}
         zoomOnScroll={true}
         minZoom={0.3}
         maxZoom={2}
