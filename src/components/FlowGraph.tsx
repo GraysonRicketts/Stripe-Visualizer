@@ -32,7 +32,9 @@ export function FlowGraph() {
 
   const edges = useMemo<Edge[]>(() => {
     return baseEdges.map((edge) => {
-      const sourceIndex = stepNodeIds.indexOf(edge.source)
+      // Non-step sources (e.g. time-chasm) derive their index from the target
+      const rawSourceIndex = stepNodeIds.indexOf(edge.source)
+      const sourceIndex = rawSourceIndex !== -1 ? rawSourceIndex : stepNodeIds.indexOf(edge.target) - 1
       const isCompleted = completedSteps.has(sourceIndex) && completedSteps.has(sourceIndex + 1)
       const isActive = activeStep === sourceIndex + 1 || activeStep === sourceIndex
       const isFailed = failedStep === sourceIndex + 1

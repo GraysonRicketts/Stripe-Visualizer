@@ -1,6 +1,6 @@
 import { Handle, Position } from '@xyflow/react'
 import { usePaymentStore, STEP_NODE_IDS } from '../../store/paymentStore'
-import type { NodeData } from '../../data/credit/layout'
+import type { NodeData } from '../../data/swimlanes'
 import {
   Monitor,
   Shield,
