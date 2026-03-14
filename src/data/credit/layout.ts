@@ -19,7 +19,7 @@ export const NODES: Node<NodeData>[] = [
     id: 'stripe-js',
     type: 'paymentNode',
     position: { x: 0, y: 130 },
-    data: { label: 'Stripe.js', sublabel: 'PAN tokenized → PaymentMethod', stepIndex: 1, icon: 'shield' },
+    data: { label: 'Tokenization', sublabel: 'PAN encrypted → stored in Stripe vault', stepIndex: 1, icon: 'shield' },
   },
   {
     id: 'stripe-api',
@@ -49,7 +49,7 @@ export const NODES: Node<NodeData>[] = [
     id: 'merchant',
     type: 'paymentNode',
     position: { x: 0, y: 780 },
-    data: { label: 'Merchant Account', sublabel: 'Funds captured', stepIndex: 6, icon: 'store' },
+    data: { label: 'Capture', sublabel: 'Authorized funds acquired', stepIndex: 6, icon: 'store' },
   },
   {
     id: 'payout',
@@ -60,11 +60,11 @@ export const NODES: Node<NodeData>[] = [
 ]
 
 export const EDGES: Edge[] = [
-  { id: 'e0-1', source: 'customer', target: 'stripe-js', label: 'card details' },
-  { id: 'e1-2', source: 'stripe-js', target: 'stripe-api', label: 'pm_token' },
+  { id: 'e0-1', source: 'customer', target: 'stripe-js', label: 'raw card data' },
+  { id: 'e1-2', source: 'stripe-js', target: 'stripe-api', label: 'secure token' },
   { id: 'e2-3', source: 'stripe-api', target: 'radar', label: 'payment_intent' },
   { id: 'e3-4', source: 'radar', target: 'network', label: 'auth request' },
   { id: 'e4-5', source: 'network', target: 'bank', label: 'ISO 8583 auth' },
-  { id: 'e5-6', source: 'bank', target: 'merchant', label: 'approval code' },
+  { id: 'e5-6', source: 'bank', target: 'merchant', label: 'auth approved' },
   { id: 'e6-7', source: 'merchant', target: 'payout', label: 'capture complete' },
 ]

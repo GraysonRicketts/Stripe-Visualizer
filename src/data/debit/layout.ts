@@ -14,7 +14,7 @@ export const NODES: Node<NodeData>[] = [
     id: 'stripe-js',
     type: 'paymentNode',
     position: { x: 0, y: 130 },
-    data: { label: 'Stripe.js', sublabel: 'PAN + PIN block encrypted', stepIndex: 1, icon: 'shield' },
+    data: { label: 'Tokenization', sublabel: 'PAN + PIN block → vault', stepIndex: 1, icon: 'shield' },
   },
   {
     id: 'stripe-api',
@@ -50,7 +50,7 @@ export const NODES: Node<NodeData>[] = [
     id: 'merchant',
     type: 'paymentNode',
     position: { x: 0, y: 910 },
-    data: { label: 'Merchant Account', sublabel: 'Funds debited', stepIndex: 7, icon: 'store' },
+    data: { label: 'Immediate Debit', sublabel: 'No auth-then-capture; funds debited now', stepIndex: 7, icon: 'store' },
   },
   {
     id: 'ach-settlement',
@@ -61,12 +61,12 @@ export const NODES: Node<NodeData>[] = [
 ]
 
 export const EDGES: Edge[] = [
-  { id: 'e0-1', source: 'customer', target: 'stripe-js', label: 'card + PIN' },
-  { id: 'e1-2', source: 'stripe-js', target: 'stripe-api', label: 'pm_token' },
+  { id: 'e0-1', source: 'customer', target: 'stripe-js', label: 'raw card + PIN' },
+  { id: 'e1-2', source: 'stripe-js', target: 'stripe-api', label: 'secure token' },
   { id: 'e2-3', source: 'stripe-api', target: 'radar', label: 'payment_intent' },
   { id: 'e3-4', source: 'radar', target: 'debit-network', label: 'auth request' },
   { id: 'e4-5', source: 'debit-network', target: 'pin-verify', label: 'PIN debit auth' },
   { id: 'e5-6', source: 'pin-verify', target: 'balance-check', label: 'PIN valid' },
-  { id: 'e6-7', source: 'balance-check', target: 'merchant', label: 'funds confirmed' },
+  { id: 'e6-7', source: 'balance-check', target: 'merchant', label: 'debit authorized' },
   { id: 'e7-8', source: 'merchant', target: 'ach-settlement', label: 'debit complete' },
 ]

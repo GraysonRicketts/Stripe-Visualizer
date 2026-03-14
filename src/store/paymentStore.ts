@@ -49,13 +49,13 @@ type EventDef = { label: string; sublabel: string }
 // ── Credit scenarios ──────────────────────────────────────────────────────────
 
 const CREDIT_SUCCESS_EVENTS: EventDef[] = [
-  { label: 'payment_method.created', sublabel: 'Token pm_xxx generated' },
+  { label: 'payment_method.created', sublabel: 'PAN vaulted, token pm_xxx issued' },
   { label: 'payment_intent.created', sublabel: 'id: pi_xxx, status: requires_payment_method' },
   { label: 'payment_intent.processing', sublabel: 'Charge ch_xxx created' },
   { label: 'radar.early_fraud_warning.created', sublabel: 'risk_level: normal, risk_score: 12' },
   { label: 'charge.pending', sublabel: 'Auth request sent to Visa network' },
   { label: 'charge.succeeded', sublabel: 'Bank approved, code: 00' },
-  { label: 'payment_intent.succeeded', sublabel: 'amount_captured: 4900' },
+  { label: 'payment_intent.succeeded', sublabel: 'capture_method: automatic, amount_captured: 4900' },
   { label: 'payout.created', sublabel: 'arrival_date: T+2, type: bank_account' },
 ]
 
@@ -78,14 +78,14 @@ const CREDIT_SCENARIO_CONFIG: Record<CreditScenario, { failStep: number; events:
 // ── Debit scenarios ───────────────────────────────────────────────────────────
 
 const DEBIT_SUCCESS_EVENTS: EventDef[] = [
-  { label: 'payment_method.created', sublabel: 'Debit token pm_xxx generated' },
+  { label: 'payment_method.created', sublabel: 'PAN vaulted, debit token pm_xxx issued' },
   { label: 'payment_intent.created', sublabel: 'id: pi_xxx, funding: debit' },
   { label: 'payment_intent.processing', sublabel: 'Charge ch_xxx queued for debit network' },
   { label: 'radar.early_fraud_warning.created', sublabel: 'risk_level: normal, risk_score: 8' },
   { label: 'charge.pending', sublabel: 'Auth request sent to Star network' },
   { label: 'payment_method.updated', sublabel: 'PIN verification: success, code: 00' },
   { label: 'charge.pending', sublabel: 'Balance verified: sufficient_funds: true' },
-  { label: 'charge.succeeded', sublabel: 'Debit authorized, code: 00' },
+  { label: 'charge.succeeded', sublabel: 'Immediate debit — no capture phase, code: 00' },
   { label: 'payout.created', sublabel: 'method: same_day_ach, arrival: today' },
 ]
 

@@ -9,13 +9,17 @@ export interface StepPayload {
 
 const SUCCESS_PAYLOADS: StepPayload[] = [
   {
-    title: 'PaymentMethod Created',
+    title: 'Tokenization — PaymentMethod Created',
     object: 'payment_method',
-    description: "Stripe.js encrypts the debit card details and PIN block in the browser into a secure token. The raw PAN and PIN never leave the cardholder's device — only the encrypted bundle is transmitted.",
+    description: "Stripe.js intercepts the raw PAN and PIN block in the browser and encrypts both immediately. The card number is stored in Stripe's PCI-compliant vault; the PIN block travels separately via end-to-end encryption to the bank's HSM. Only a secure PaymentMethod token (pm_xxx) is transmitted to your server.",
     data: {
       id: 'pm_1OxK2LBLpOGa8XCy0DEBIT0',
       object: 'payment_method',
       type: 'card',
+      vault_stored: true,
+      pan_transmitted: false,
+      pin_block_encrypted: true,
+      token_type: 'payment_method',
       card: {
         brand: 'visa',
         last4: '5556',
@@ -137,15 +141,17 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
     },
   },
   {
-    title: 'Funds Debited',
+    title: 'Immediate Debit — Funds Transferred',
     object: 'charge',
-    description: "The bank authorizes the debit, immediately reducing the cardholder's available balance. The charge succeeds and funds are transferred to the merchant's account on the same business day.",
+    description: "Unlike credit cards, debit has no separate Capture phase. Authorization and fund transfer happen in a single atomic step: the bank immediately reduces the cardholder's available balance. There is no authorize-then-capture window.",
     data: {
       id: 'ch_3OxK2LBLpOGa8XCy0DEBIT2',
       object: 'charge',
       status: 'succeeded',
       amount: 4900,
       amount_captured: 4900,
+      capture_method: 'immediate',
+      authorize_then_capture: false,
       paid: true,
       debit_type: 'online_pin_debit',
       outcome: {

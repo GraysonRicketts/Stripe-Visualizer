@@ -9,13 +9,16 @@ export interface StepPayload {
 
 const SUCCESS_PAYLOADS: StepPayload[] = [
   {
-    title: 'PaymentMethod Created',
+    title: 'Tokenization — PaymentMethod Created',
     object: 'payment_method',
-    description: "Stripe.js tokenizes the raw card details in the browser into a reusable PaymentMethod object. The PAN never touches your server — only a secure token is transmitted.",
+    description: "Stripe.js intercepts the raw PAN in the browser and immediately encrypts it. The card number is stored in Stripe's PCI-compliant vault and never transmitted to your server — only a secure PaymentMethod token (pm_xxx) travels onward.",
     data: {
       id: 'pm_1OxK2LBLpOGa8XCy0EXAMPLE',
       object: 'payment_method',
       type: 'card',
+      vault_stored: true,
+      pan_transmitted: false,
+      token_type: 'payment_method',
       card: {
         brand: 'visa',
         last4: '4242',
@@ -128,15 +131,17 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
     },
   },
   {
-    title: 'Funds Captured',
+    title: 'Capture — Funds Acquired',
     object: 'payment_intent',
-    description: "Stripe captures the authorized funds into your balance. The PaymentIntent status becomes 'succeeded' and a payment_intent.succeeded webhook is fired to your backend.",
+    description: "Stripe executes the Capture phase: the previously authorized hold is converted into an actual charge. With capture_method: 'automatic', this happens immediately after authorization. The PaymentIntent status becomes 'succeeded' and a payment_intent.succeeded webhook fires to your backend.",
     data: {
       id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
       object: 'payment_intent',
       status: 'succeeded',
       amount: 4900,
       amount_received: 4900,
+      amount_captured: 4900,
+      capture_method: 'automatic',
       currency: 'usd',
       latest_charge: 'ch_3OxK2LBLpOGa8XCy0EXAMPLE',
       created: 1710000004,
