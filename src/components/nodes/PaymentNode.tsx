@@ -31,11 +31,12 @@ const ICONS: Record<string, React.ElementType> = {
 }
 
 interface PaymentNodeProps {
+  id: string
   data: NodeData
 }
 
-export function PaymentNode({ data }: PaymentNodeProps) {
-  const { flowType, activeStep, completedSteps, failedStep, status } = usePaymentStore()
+export function PaymentNode({ id, data }: PaymentNodeProps) {
+  const { flowType, activeStep, completedSteps, failedStep, status, selectNode } = usePaymentStore()
   const { label, sublabel, stepIndex, icon } = data
 
   const isActive = activeStep === stepIndex
@@ -80,7 +81,6 @@ export function PaymentNode({ data }: PaymentNodeProps) {
     <div
       className={`relative w-[260px] rounded-xl border ${borderColor} ${bgColor} px-4 py-3 transition-all duration-300 ${clickable ? 'cursor-pointer hover:brightness-110' : 'cursor-default'}`}
       style={{ ...glowStyle, ...animStyle }}
-
     >
       {!isFirst && (
         <Handle

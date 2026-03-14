@@ -13,9 +13,12 @@ import { usePaymentStore, STEP_NODE_IDS } from '../store/paymentStore'
 import { NODES as CREDIT_NODES, EDGES as CREDIT_EDGES } from '../data/credit/layout'
 import { NODES as DEBIT_NODES, EDGES as DEBIT_EDGES } from '../data/debit/layout'
 import { PaymentNode } from './nodes/PaymentNode'
+import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
 
 const nodeTypes: NodeTypes = {
   paymentNode: PaymentNode as unknown as NodeTypes[string],
+  swimlaneBackground: SwimlaneBackgroundNode as unknown as NodeTypes[string],
+  swimlaneHeader: SwimlaneHeaderNode as unknown as NodeTypes[string],
 }
 
 export function FlowGraph() {
@@ -79,17 +82,19 @@ export function FlowGraph() {
         edges={edges}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.15 }}
+        fitViewOptions={{ padding: 0.08 }}
+        onNodeClick={(_, node) => {
+          if (node.type !== 'paymentNode') return
+          const stepIndex = stepNodeIds.indexOf(node.id)
+          if (stepIndex === -1) return
+          if (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex) {
+            selectNode(node.id)
+          }
+        }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
         panOnDrag={true}
-        onNodeClick={(_, node) => {
-          const stepIndex = stepNodeIds.indexOf(node.id)
-          if (stepIndex === -1) return
-          const clickable = completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex
-          if (clickable) selectNode(node.id)
-        }}
         zoomOnScroll={true}
         minZoom={0.3}
         maxZoom={2}
