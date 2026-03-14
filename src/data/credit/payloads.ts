@@ -4,6 +4,7 @@ export interface StepPayload {
   title: string
   object: string
   description: string
+  timing?: string
   data: Record<string, unknown>
 }
 
@@ -11,6 +12,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Tokenization — PaymentMethod Created',
     object: 'payment_method',
+    timing: '~100–200ms',
     description: "Stripe.js intercepts the raw PAN in the browser and immediately encrypts it. The card number is stored in Stripe's PCI-compliant vault and never transmitted to your server — only a secure PaymentMethod token (pm_xxx) travels onward.",
     data: {
       id: 'pm_1OxK2LBLpOGa8XCy0EXAMPLE',
@@ -40,6 +42,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'PaymentIntent Created',
     object: 'payment_intent',
+    timing: '~200–500ms',
     description: "Your server creates a PaymentIntent representing the intent to collect a specific amount. Stripe validates the request and attaches the PaymentMethod, queuing it for processing.",
     data: {
       id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
@@ -59,6 +62,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Payment Processing',
     object: 'charge',
+    timing: '~200–500ms',
     description: "Stripe's API creates a pending Charge under the PaymentIntent and begins routing it through the internal processing pipeline toward the card network.",
     data: {
       id: 'ch_3OxK2LBLpOGa8XCy0EXAMPLE',
@@ -78,6 +82,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Radar Risk Assessment',
     object: 'radar.early_fraud_warning',
+    timing: '~100–300ms',
     description: "Stripe Radar's ML model evaluates the transaction against hundreds of signals. A risk score of 12/100 with no block rules triggered means the payment proceeds to network authorization.",
     data: {
       id: 'issfr_1OxK2LEXAMPLE',
@@ -97,6 +102,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Network Authorization Request',
     object: 'issuing.authorization',
+    timing: '~500ms–2s',
     description: "Stripe sends an ISO 8583 authorization request to the Visa network, which routes it to the cardholder's issuing bank for an approve/decline decision.",
     data: {
       network: 'visa',
@@ -112,6 +118,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Bank Authorization',
     object: 'charge',
+    timing: '~1–3s',
     description: "The issuing bank verifies the cardholder's available funds and card validity, returning an approval code. The charge status moves to 'succeeded' and funds are reserved.",
     data: {
       id: 'ch_3OxK2LBLpOGa8XCy0EXAMPLE',
@@ -133,6 +140,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Capture — Funds Acquired',
     object: 'payment_intent',
+    timing: '~instant (automatic)',
     description: "Stripe executes the Capture phase: the previously authorized hold is converted into an actual charge. With capture_method: 'automatic', this happens immediately after authorization. The PaymentIntent status becomes 'succeeded' and a payment_intent.succeeded webhook fires to your backend.",
     data: {
       id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
@@ -150,6 +158,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Payout Scheduled',
     object: 'payout',
+    timing: '2–3 business days',
     description: "Stripe schedules a net payout of $46.24 (after $2.76 in processing fees) to your connected bank account. Standard payouts arrive in T+2 business days.",
     data: {
       id: 'po_1OxK2LBLpOGa8XCy0EXAMPLE',
@@ -173,6 +182,7 @@ const DECLINED_PAYLOADS: StepPayload[] = [
   {
     title: 'Bank Declined',
     object: 'charge',
+    timing: '~1–3s',
     description: "The issuing bank rejects the transaction with a generic decline (code 05). Common causes: insufficient funds, daily spend limits, or a bank-side fraud block.",
     data: {
       id: 'ch_3OxK2LBLpOGa8XCy0EXAMPLE',
@@ -199,6 +209,7 @@ const FRAUD_PAYLOADS: StepPayload[] = [
   {
     title: 'Radar Blocked',
     object: 'radar.early_fraud_warning',
+    timing: '~100–300ms',
     description: "Radar's ML model scored this card at 94/100 risk and triggered two block rules. The payment is stopped here — no authorization request is sent to the card network.",
     data: {
       id: 'issfr_1OxK2LEXAMPLE',

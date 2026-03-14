@@ -5,6 +5,7 @@ export interface NodeData {
   sublabel: string
   stepIndex: number
   icon: string
+  timing?: string
   [key: string]: unknown
 }
 
@@ -126,49 +127,62 @@ export const NODES: Node[] = [
     id: 'customer',
     type: 'paymentNode',
     position: { x: NODE_X.customer, y: Y(0) },
-    data: { label: 'Customer Browser', sublabel: 'Card details entered', stepIndex: 0, icon: 'monitor' },
+    data: { label: 'Customer Browser', sublabel: 'Card details entered', stepIndex: 0, icon: 'monitor', timing: '~instant' },
   },
   {
     id: 'stripe-js',
     type: 'paymentNode',
     position: { x: NODE_X.stripe, y: Y(1) },
-    data: { label: 'Tokenization', sublabel: 'PAN encrypted → stored in Stripe vault', stepIndex: 1, icon: 'shield' },
+    data: { label: 'Tokenization', sublabel: 'PAN encrypted → stored in Stripe vault', stepIndex: 1, icon: 'shield', timing: '~100–200ms' },
   },
   {
     id: 'stripe-api',
     type: 'paymentNode',
     position: { x: NODE_X.stripe, y: Y(2) },
-    data: { label: 'Stripe API', sublabel: 'PaymentIntent created', stepIndex: 2, icon: 'server' },
+    data: { label: 'Stripe API', sublabel: 'PaymentIntent created', stepIndex: 2, icon: 'server', timing: '~200–500ms' },
   },
   {
     id: 'radar',
     type: 'paymentNode',
     position: { x: NODE_X.stripe, y: Y(3) },
-    data: { label: 'Stripe Radar', sublabel: 'ML fraud scoring', stepIndex: 3, icon: 'radar' },
+    data: { label: 'Stripe Radar', sublabel: 'ML fraud scoring', stepIndex: 3, icon: 'radar', timing: '~100–300ms' },
   },
   {
     id: 'network',
     type: 'paymentNode',
     position: { x: NODE_X.network, y: Y(4) },
-    data: { label: 'Card Network', sublabel: 'Visa / Mastercard routing', stepIndex: 4, icon: 'network' },
+    data: { label: 'Card Network', sublabel: 'Visa / Mastercard routing', stepIndex: 4, icon: 'network', timing: '~500ms–2s' },
   },
   {
     id: 'bank',
     type: 'paymentNode',
     position: { x: NODE_X.bank, y: Y(5) },
-    data: { label: 'Issuing Bank', sublabel: 'Authorization decision', stepIndex: 5, icon: 'bank' },
+    data: { label: 'Issuing Bank', sublabel: 'Authorization decision', stepIndex: 5, icon: 'bank', timing: '~1–3s' },
   },
   {
     id: 'merchant',
     type: 'paymentNode',
     position: { x: NODE_X.stripe, y: Y(6) },
-    data: { label: 'Capture', sublabel: 'Authorized funds acquired', stepIndex: 6, icon: 'store' },
+    data: { label: 'Capture', sublabel: 'Authorized funds acquired', stepIndex: 6, icon: 'store', timing: '~instant (automatic)' },
   },
   {
     id: 'payout',
     type: 'paymentNode',
     position: { x: NODE_X.stripe, y: Y(7) },
-    data: { label: 'Payout Engine', sublabel: 'T+2 bank transfer', stepIndex: 7, icon: 'payout' },
+    data: { label: 'Payout Engine', sublabel: 'T+2 bank transfer', stepIndex: 7, icon: 'payout', timing: '2–3 business days' },
+  },
+
+  // ── Time chasm separator ──────────────────────────────────────────────
+  {
+    id: 'time-chasm',
+    type: 'timeChasmNode',
+    position: { x: 0, y: 1042 },
+    zIndex: 0,
+    selectable: false,
+    draggable: false,
+    focusable: false,
+    style: { pointerEvents: 'none' as const },
+    data: { label: '2–3 business days', sublabel: 'settlement & reconciliation' },
   },
 ]
 

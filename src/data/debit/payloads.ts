@@ -4,6 +4,7 @@ export interface StepPayload {
   title: string
   object: string
   description: string
+  timing?: string
   data: Record<string, unknown>
 }
 
@@ -11,6 +12,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Tokenization — PaymentMethod Created',
     object: 'payment_method',
+    timing: '~100–200ms',
     description: "Stripe.js intercepts the raw PAN and PIN block in the browser and encrypts both immediately. The card number is stored in Stripe's PCI-compliant vault; the PIN block travels separately via end-to-end encryption to the bank's HSM. Only a secure PaymentMethod token (pm_xxx) is transmitted to your server.",
     data: {
       id: 'pm_1OxK2LBLpOGa8XCy0DEBIT0',
@@ -41,6 +43,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'PaymentIntent Created',
     object: 'payment_intent',
+    timing: '~200–500ms',
     description: "Your server creates a PaymentIntent for the debit transaction. Stripe recognizes the debit funding source and prepares to route through the PIN debit network instead of standard credit rails.",
     data: {
       id: 'pi_3OxK2LBLpOGa8XCy0DEBIT1',
@@ -59,6 +62,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Payment Processing',
     object: 'charge',
+    timing: '~200–500ms',
     description: "Stripe's API creates a pending Charge. The debit funding source is identified and the transaction is queued for routing through the Star / Interac PIN debit network.",
     data: {
       id: 'ch_3OxK2LBLpOGa8XCy0DEBIT2',
@@ -78,6 +82,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Radar Risk Assessment',
     object: 'radar.early_fraud_warning',
+    timing: '~100–300ms',
     description: "Stripe Radar evaluates the debit transaction. Debit transactions with PIN verification generally carry lower fraud risk — a score of 8/100 clears all block rules with no issues.",
     data: {
       id: 'issfr_1OxK2LDEBITEXAMPLE',
@@ -97,6 +102,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Debit Network Routing',
     object: 'issuing.authorization',
+    timing: '~500ms–2s',
     description: "Stripe routes the transaction through the Star PIN debit network — not Visa/Mastercard credit rails. The network prepares an authorization request in the debit ISO 8583 format.",
     data: {
       network: 'star',
@@ -113,6 +119,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'PIN Verification',
     object: 'payment_method.updated',
+    timing: '~1–2s',
     description: "The issuing bank's HSM (Hardware Security Module) decrypts and validates the encrypted PIN block. A successful match confirms the cardholder is physically present with the card.",
     data: {
       id: 'pm_1OxK2LBLpOGa8XCy0DEBIT0',
@@ -129,6 +136,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Balance Verified',
     object: 'charge',
+    timing: '~500ms–1s',
     description: "The bank queries the cardholder's checking account in real time. With $523.40 available and only $49.00 requested, funds are confirmed sufficient and a hold is placed immediately.",
     data: {
       account_type: 'checking',
@@ -143,6 +151,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'Immediate Debit — Funds Transferred',
     object: 'charge',
+    timing: '~instant (atomic)',
     description: "Unlike credit cards, debit has no separate Capture phase. Authorization and fund transfer happen in a single atomic step: the bank immediately reduces the cardholder's available balance. There is no authorize-then-capture window.",
     data: {
       id: 'ch_3OxK2LBLpOGa8XCy0DEBIT2',
@@ -167,6 +176,7 @@ const SUCCESS_PAYLOADS: StepPayload[] = [
   {
     title: 'ACH Settlement',
     object: 'payout',
+    timing: 'same-day ACH',
     description: "Debit funds settle via same-day ACH, arriving in your merchant account by end of business today — significantly faster than the T+2 timeline for standard credit card payouts.",
     data: {
       id: 'po_1OxK2LBLpOGa8XCy0DEBIT8',
@@ -190,6 +200,7 @@ const INSUFFICIENT_FUNDS_PAYLOADS: StepPayload[] = [
   {
     title: 'Insufficient Funds',
     object: 'charge',
+    timing: '~500ms–1s',
     description: "The bank queries the checking account and finds insufficient funds. With only $22.10 available but $49.00 requested, the debit is declined with response code 51.",
     data: {
       account_type: 'checking',

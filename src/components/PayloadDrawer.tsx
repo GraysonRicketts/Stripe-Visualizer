@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Code2 } from 'lucide-react'
+import { X, Code2, Clock } from 'lucide-react'
 import { usePaymentStore, STEP_NODE_IDS, type CreditScenario, type DebitScenario } from '../store/paymentStore'
 import { getPayload as getCreditPayload } from '../data/credit/payloads'
 import { getPayload as getDebitPayload } from '../data/debit/payloads'
@@ -81,6 +81,15 @@ export function PayloadDrawer() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Timing badge */}
+              {payload.timing && (
+                <div className="px-4 py-2 border-b border-[#1a1b2e] flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-[#f59e0b] flex-shrink-0" />
+                  <span className="text-sm font-mono font-semibold text-[#f59e0b]">{payload.timing}</span>
+                  <span className="text-xs text-slate-600">typical latency</span>
+                </div>
+              )}
 
               {/* Description */}
               <div className="px-4 py-3 border-b border-[#1a1b2e] bg-[#0a0b14]/60">

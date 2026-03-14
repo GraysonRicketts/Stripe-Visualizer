@@ -37,7 +37,7 @@ interface PaymentNodeProps {
 
 export function PaymentNode({ id, data }: PaymentNodeProps) {
   const { flowType, activeStep, completedSteps, failedStep, status, selectNode } = usePaymentStore()
-  const { label, sublabel, stepIndex, icon } = data
+  const { label, sublabel, stepIndex, icon, timing } = data
 
   const isActive = activeStep === stepIndex
   const isCompleted = completedSteps.has(stepIndex)
@@ -102,6 +102,9 @@ export function PaymentNode({ id, data }: PaymentNodeProps) {
             {label}
           </div>
           <div className="text-xs text-slate-600 mt-0.5 truncate">{sublabel}</div>
+          {timing && (isActive || isCompleted) && (
+            <div className="text-[10px] font-mono mt-0.5 text-[#f59e0b]/70 tabular-nums">{timing}</div>
+          )}
         </div>
 
         {/* Status badge */}

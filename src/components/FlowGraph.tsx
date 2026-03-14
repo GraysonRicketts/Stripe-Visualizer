@@ -14,11 +14,13 @@ import { NODES as CREDIT_NODES, EDGES as CREDIT_EDGES } from '../data/credit/lay
 import { NODES as DEBIT_NODES, EDGES as DEBIT_EDGES } from '../data/debit/layout'
 import { PaymentNode } from './nodes/PaymentNode'
 import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
+import { TimeChasmNode } from './nodes/TimeChasmNode'
 
 const nodeTypes: NodeTypes = {
   paymentNode: PaymentNode as unknown as NodeTypes[string],
   swimlaneBackground: SwimlaneBackgroundNode as unknown as NodeTypes[string],
   swimlaneHeader: SwimlaneHeaderNode as unknown as NodeTypes[string],
+  timeChasmNode: TimeChasmNode as unknown as NodeTypes[string],
 }
 
 export function FlowGraph() {
