@@ -1,6 +1,6 @@
 import { Handle, Position } from '@xyflow/react'
 import { usePaymentStore, STEP_NODE_IDS } from '../../store/paymentStore'
-import type { NodeData } from '../../data/flowLayout'
+import type { NodeData } from '../../data/credit/layout'
 import {
   Monitor,
   Shield,
@@ -10,6 +10,8 @@ import {
   Building2,
   Store,
   Banknote,
+  Lock,
+  Wallet,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -24,6 +26,8 @@ const ICONS: Record<string, React.ElementType> = {
   bank: Building2,
   store: Store,
   payout: Banknote,
+  lock: Lock,
+  wallet: Wallet,
 }
 
 interface PaymentNodeProps {
@@ -31,7 +35,7 @@ interface PaymentNodeProps {
 }
 
 export function PaymentNode({ data }: PaymentNodeProps) {
-  const { activeStep, completedSteps, failedStep, status } = usePaymentStore()
+  const { flowType, activeStep, completedSteps, failedStep, status } = usePaymentStore()
   const { label, sublabel, stepIndex, icon } = data
 
   const isActive = activeStep === stepIndex
@@ -70,7 +74,7 @@ export function PaymentNode({ data }: PaymentNodeProps) {
 
   const clickable = isCompleted || isActive || isFailed
   const isFirst = stepIndex === 0
-  const isLast = stepIndex === STEP_NODE_IDS.length - 1
+  const isLast = stepIndex === STEP_NODE_IDS[flowType].length - 1
 
   return (
     <div

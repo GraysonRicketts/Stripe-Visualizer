@@ -1,10 +1,14 @@
 import { Play, Square, RotateCcw } from 'lucide-react'
-import { usePaymentStore, STEP_NODE_IDS } from '../store/paymentStore'
+import { usePaymentStore, STEP_NODE_IDS, type FlowType } from '../store/paymentStore'
 
-const STEP_LABELS = ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Merchant', 'Payout']
+const STEP_LABELS: Record<FlowType, string[]> = {
+  credit: ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Merchant', 'Payout'],
+  debit:  ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Merchant', 'ACH'],
+}
 
 export function TimelineBar() {
   const {
+    flowType,
     status,
     activeStep,
     completedSteps,
@@ -19,7 +23,9 @@ export function TimelineBar() {
   const isRunning = status === 'running'
   const isDone = status === 'complete' || status === 'failed'
 
-  const selectedStepIndex = selectedNodeId ? STEP_NODE_IDS.indexOf(selectedNodeId) : -1
+  const stepNodeIds = STEP_NODE_IDS[flowType]
+  const stepLabels = STEP_LABELS[flowType]
+  const selectedStepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
 
   function handlePlayButton() {
     if (isRunning) {
@@ -84,9 +90,9 @@ export function TimelineBar() {
 
       {/* Timeline steps */}
       <div className="flex-1 flex items-center min-w-0">
-        {STEP_NODE_IDS.map((_, i) => {
+        {stepNodeIds.map((_, i) => {
           const { bg, border, ring, pulse } = getNodeStyle(i)
-          const connectorColor = i < STEP_NODE_IDS.length - 1 ? getConnectorColor(i) : null
+          const connectorColor = i < stepNodeIds.length - 1 ? getConnectorColor(i) : null
 
           return (
             <div key={i} className="flex items-center flex-1 last:flex-none">
@@ -95,7 +101,7 @@ export function TimelineBar() {
                 <button
                   onClick={() => !isRunning && jumpToStep(i)}
                   disabled={isRunning}
-                  title={STEP_LABELS[i]}
+                  title={stepLabels[i]}
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 text-[10px] font-bold ${
                     isRunning ? 'cursor-not-allowed' : 'cursor-pointer hover:brightness-125'
                   } ${pulse ? 'animate-pulse' : ''}`}
@@ -108,7 +114,7 @@ export function TimelineBar() {
                 >
                   {i + 1}
                 </button>
-                <span className="text-[9px] text-slate-600 whitespace-nowrap">{STEP_LABELS[i]}</span>
+                <span className="text-[9px] text-slate-600 whitespace-nowrap">{stepLabels[i]}</span>
               </div>
 
               {/* Connector line */}

@@ -1,14 +1,26 @@
-import { usePaymentStore, type Scenario } from '../store/paymentStore'
+import { usePaymentStore, type FlowType, type CreditScenario, type DebitScenario, type Scenario } from '../store/paymentStore'
 
-const SCENARIO_LABELS: Record<Scenario, { label: string; color: string; desc: string }> = {
-  success: { label: 'Success', color: '#00d4a0', desc: 'Payment authorized and captured' },
-  declined: { label: 'Declined', color: '#ff4757', desc: 'Card declined by issuing bank' },
-  fraud: { label: 'Fraud Block', color: '#f59e0b', desc: 'Blocked by Radar fraud detection' },
-}
+const FLOW_TYPES: { value: FlowType; label: string }[] = [
+  { value: 'credit', label: 'Credit Card' },
+  { value: 'debit',  label: 'Debit Card' },
+]
+
+const CREDIT_SCENARIOS: { value: CreditScenario; label: string; color: string; desc: string }[] = [
+  { value: 'success',  label: 'Success',     color: '#00d4a0', desc: 'Payment authorized and captured' },
+  { value: 'declined', label: 'Declined',    color: '#ff4757', desc: 'Card declined by issuing bank' },
+  { value: 'fraud',    label: 'Fraud Block', color: '#f59e0b', desc: 'Blocked by Radar fraud detection' },
+]
+
+const DEBIT_SCENARIOS: { value: DebitScenario; label: string; color: string; desc: string }[] = [
+  { value: 'success',            label: 'Success',            color: '#00d4a0', desc: 'Debit authorized and settled via ACH' },
+  { value: 'insufficient_funds', label: 'Insufficient Funds', color: '#ff4757', desc: 'Balance check fails at issuing bank' },
+]
 
 export function CheckoutPanel() {
-  const { scenario, setScenario, status } = usePaymentStore()
+  const { flowType, setFlowType, scenario, setScenario, status } = usePaymentStore()
   const isRunning = status === 'running'
+
+  const scenarios = flowType === 'credit' ? CREDIT_SCENARIOS : DEBIT_SCENARIOS
 
   return (
     <div className="flex flex-col h-full bg-[#0c0d18] border-r border-[#1a1b2e] overflow-y-auto">
@@ -30,19 +42,41 @@ export function CheckoutPanel() {
         </a>
       </div>
 
+      {/* Flow Type Toggle */}
+      <div className="px-6 pt-5">
+        <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+          Payment Type
+        </label>
+        <div className="flex gap-2">
+          {FLOW_TYPES.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => !isRunning && setFlowType(value)}
+              disabled={isRunning}
+              className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all duration-200 ${
+                flowType === value
+                  ? 'border-[#635bff]/60 bg-[#1a1b2e] text-white'
+                  : 'border-[#1a1b2e] bg-transparent text-slate-500 hover:border-[#2a2d4a] hover:text-slate-300'
+              } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Scenario Picker */}
       <div className="px-6 pt-5">
         <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
           Scenario
         </label>
         <div className="flex flex-col gap-2">
-          {(Object.keys(SCENARIO_LABELS) as Scenario[]).map((s) => {
-            const { label, color, desc } = SCENARIO_LABELS[s]
-            const active = scenario === s
+          {scenarios.map(({ value, label, color, desc }) => {
+            const active = scenario === (value as Scenario)
             return (
               <button
-                key={s}
-                onClick={() => !isRunning && setScenario(s)}
+                key={value}
+                onClick={() => !isRunning && setScenario(value as Scenario)}
                 disabled={isRunning}
                 className={`w-full text-left rounded-lg border px-3 py-2.5 transition-all duration-200 ${
                   active

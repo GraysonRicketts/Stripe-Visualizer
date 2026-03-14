@@ -10,21 +10,24 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { usePaymentStore, STEP_NODE_IDS } from '../store/paymentStore'
-import { FLOW_NODES, FLOW_EDGES } from '../data/flowLayout'
+import { NODES as CREDIT_NODES, EDGES as CREDIT_EDGES } from '../data/credit/layout'
+import { NODES as DEBIT_NODES, EDGES as DEBIT_EDGES } from '../data/debit/layout'
 import { PaymentNode } from './nodes/PaymentNode'
 
 const nodeTypes: NodeTypes = {
   paymentNode: PaymentNode as unknown as NodeTypes[string],
 }
 
-const ALL_NODES: Node[] = FLOW_NODES as Node[]
-
 export function FlowGraph() {
-  const { activeStep, completedSteps, failedStep, selectNode } = usePaymentStore()
+  const { flowType, activeStep, completedSteps, failedStep, selectNode } = usePaymentStore()
+
+  const allNodes = (flowType === 'credit' ? CREDIT_NODES : DEBIT_NODES) as Node[]
+  const baseEdges = flowType === 'credit' ? CREDIT_EDGES : DEBIT_EDGES
+  const stepNodeIds = STEP_NODE_IDS[flowType]
 
   const edges = useMemo<Edge[]>(() => {
-    const result: Edge[] = FLOW_EDGES.map((edge) => {
-      const sourceIndex = STEP_NODE_IDS.indexOf(edge.source)
+    return baseEdges.map((edge) => {
+      const sourceIndex = stepNodeIds.indexOf(edge.source)
       const isCompleted = completedSteps.has(sourceIndex) && completedSteps.has(sourceIndex + 1)
       const isActive = activeStep === sourceIndex + 1 || activeStep === sourceIndex
       const isFailed = failedStep === sourceIndex + 1
@@ -67,14 +70,12 @@ export function FlowGraph() {
         },
       }
     })
-
-    return result
-  }, [activeStep, completedSteps, failedStep])
+  }, [flowType, baseEdges, stepNodeIds, activeStep, completedSteps, failedStep])
 
   return (
     <div className="w-full h-full">
       <ReactFlow
-        nodes={ALL_NODES}
+        nodes={allNodes}
         edges={edges}
         nodeTypes={nodeTypes}
         fitView
@@ -84,7 +85,7 @@ export function FlowGraph() {
         elementsSelectable={false}
         panOnDrag={true}
         onNodeClick={(_, node) => {
-          const stepIndex = STEP_NODE_IDS.indexOf(node.id)
+          const stepIndex = stepNodeIds.indexOf(node.id)
           if (stepIndex === -1) return
           const clickable = completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex
           if (clickable) selectNode(node.id)

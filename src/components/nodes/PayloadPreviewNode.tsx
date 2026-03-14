@@ -1,7 +1,8 @@
 import { Handle, Position } from '@xyflow/react'
 import { Code2, ChevronRight } from 'lucide-react'
-import { usePaymentStore, STEP_NODE_IDS } from '../../store/paymentStore'
-import { getPayload } from '../../data/payloads'
+import { usePaymentStore, STEP_NODE_IDS, type CreditScenario, type DebitScenario } from '../../store/paymentStore'
+import { getPayload as getCreditPayload } from '../../data/credit/payloads'
+import { getPayload as getDebitPayload } from '../../data/debit/payloads'
 
 function compactEntries(data: Record<string, unknown>): Array<{ key: string; val: string }> {
   return Object.entries(data).slice(0, 4).map(([k, v]) => {
@@ -16,13 +17,18 @@ function compactEntries(data: Record<string, unknown>): Array<{ key: string; val
 }
 
 export function PayloadPreviewNode() {
-  const { selectedNodeId, scenario, completedSteps, activeStep, failedStep, openDrawer } = usePaymentStore()
+  const { flowType, selectedNodeId, scenario, completedSteps, activeStep, failedStep, openDrawer } = usePaymentStore()
 
-  const stepIndex = selectedNodeId ? STEP_NODE_IDS.indexOf(selectedNodeId) : -1
+  const stepNodeIds = STEP_NODE_IDS[flowType]
+  const stepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
   const hasContent =
     stepIndex !== -1 &&
     (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex)
-  const payload = hasContent ? getPayload(stepIndex, scenario) : null
+  const payload = hasContent
+    ? flowType === 'credit'
+      ? getCreditPayload(stepIndex, scenario as CreditScenario)
+      : getDebitPayload(stepIndex, scenario as DebitScenario)
+    : null
 
   return (
     <div className="w-[272px] rounded-xl border border-[#1e2235] bg-[#0c0d18] overflow-hidden shadow-xl">
