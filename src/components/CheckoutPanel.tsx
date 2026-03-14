@@ -17,6 +17,17 @@ export function CheckoutPanel() {
         <h2 className="text-slate-500 text-xl font-semibold mt-2">
           Visualize how a payment flows through Stripe's infrastructure end-to-end.
         </h2>
+        <a
+          href="https://stripe.dev/blog/building-a-mental-model-for-stripe-payments"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 mt-2 text-xs text-[#635bff] hover:text-[#7c75ff] transition-colors"
+        >
+          Read: Building a mental model for Stripe payments
+          <svg viewBox="0 0 12 12" className="w-3 h-3 fill-current">
+            <path d="M3.5 3a.5.5 0 0 0 0 1H7.3L2.15 9.15a.5.5 0 1 0 .7.7L8 4.7V8.5a.5.5 0 0 0 1 0v-5a.5.5 0 0 0-.5-.5h-5z"/>
+          </svg>
+        </a>
       </div>
 
       {/* Scenario Picker */}
