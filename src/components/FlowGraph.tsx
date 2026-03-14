@@ -9,9 +9,10 @@ import {
   type Node,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { usePaymentStore, STEP_NODE_IDS } from '../store/paymentStore'
-import { NODES as CREDIT_NODES, EDGES as CREDIT_EDGES } from '../data/credit/layout'
-import { NODES as DEBIT_NODES, EDGES as DEBIT_EDGES } from '../data/debit/layout'
+import { usePaymentStore, getStepNodeIds, type CreditScenario, type DebitScenario } from '../store/paymentStore'
+import { NODES as CREDIT_SUCCESS_NODES, EDGES as CREDIT_SUCCESS_EDGES } from '../data/credit-success/layout'
+import { NODES as CREDIT_FRAUD_NODES, EDGES as CREDIT_FRAUD_EDGES } from '../data/credit-fraud/layout'
+import { NODES as DEBIT_SUCCESS_NODES, EDGES as DEBIT_SUCCESS_EDGES } from '../data/debit-success/layout'
 import { PaymentNode } from './nodes/PaymentNode'
 import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
 import { TimeChasmNode } from './nodes/TimeChasmNode'
@@ -23,12 +24,40 @@ const nodeTypes: NodeTypes = {
   timeChasmNode: TimeChasmNode as unknown as NodeTypes[string],
 }
 
-export function FlowGraph() {
-  const { flowType, activeStep, completedSteps, failedStep, selectNode } = usePaymentStore()
+const NODES_DICT: { credit: Record<CreditScenario, Node[]>, debit: Record<DebitScenario, Node[]> } = {
+  credit: {
+    success: CREDIT_SUCCESS_NODES,
+    fraud: CREDIT_FRAUD_NODES,
+    declined: CREDIT_SUCCESS_NODES,  // same nodes as success, just different edge styling
+  },
+  debit: {
+    success: DEBIT_SUCCESS_NODES,
+    insufficient_funds: DEBIT_SUCCESS_NODES,  // same nodes as success, just different edge styling
+  },
+}
 
-  const allNodes = (flowType === 'credit' ? CREDIT_NODES : DEBIT_NODES) as Node[]
-  const baseEdges = flowType === 'credit' ? CREDIT_EDGES : DEBIT_EDGES
-  const stepNodeIds = STEP_NODE_IDS[flowType]
+const EDGES_DICT: { credit: Record<CreditScenario, Edge[]>, debit: Record<DebitScenario, Edge[]> } = {
+  credit: {
+    success: CREDIT_SUCCESS_EDGES,
+    fraud: CREDIT_FRAUD_EDGES,
+    declined: CREDIT_SUCCESS_EDGES,  // same edges as success, just different styling
+  },
+  debit: {
+    success: DEBIT_SUCCESS_EDGES,
+    insufficient_funds: DEBIT_SUCCESS_EDGES,  // same edges as success, just different styling
+  },
+}
+
+export function FlowGraph() {
+  const { flowType, scenario, activeStep, completedSteps, failedStep, selectNode } = usePaymentStore()
+
+  const allNodes = flowType === 'credit'
+    ? NODES_DICT.credit[scenario as CreditScenario]
+    : NODES_DICT.debit[scenario as DebitScenario]
+  const baseEdges = flowType === 'credit'
+    ? EDGES_DICT.credit[scenario as CreditScenario]
+    : EDGES_DICT.debit[scenario as DebitScenario]
+  const stepNodeIds = getStepNodeIds(flowType, scenario)
 
   const edges = useMemo<Edge[]>(() => {
     return baseEdges.map((edge) => {

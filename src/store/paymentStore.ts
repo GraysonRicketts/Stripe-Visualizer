@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { CreditScenario } from '../data/credit/payloads'
-import type { DebitScenario } from '../data/debit/payloads'
+import type { CreditScenario } from '../data/credit-success/payloads'
+import type { DebitScenario } from '../data/debit-success/payloads'
 
 export type { CreditScenario, DebitScenario }
 export type FlowType = 'credit' | 'debit'
@@ -39,12 +39,24 @@ interface PaymentStore {
 const STEP_DURATION = 900  // ms each step takes to "process"
 const STEP_PAUSE = 400     // ms between steps
 
-export const STEP_NODE_IDS: Record<FlowType, string[]> = {
-  credit: ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'merchant', 'payout'],
-  debit: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
+export const STEP_NODE_IDS: { credit: Record<CreditScenario, string[]>, debit: Record<DebitScenario, string[]> } = {
+  credit: {
+    success: ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'merchant', 'payout'],
+    fraud: ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'merchant', 'payout'],
+    declined: ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'merchant', 'payout'],
+  },
+  debit: {
+    success: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
+    insufficient_funds: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
+  },
 }
 
 type EventDef = { label: string; sublabel: string }
+
+export function getStepNodeIds(flowType: FlowType, scenario: Scenario): string[] {
+  if (flowType === 'credit') return STEP_NODE_IDS.credit[scenario as CreditScenario]
+  return STEP_NODE_IDS.debit[scenario as DebitScenario]
+}
 
 // ── Credit scenarios ──────────────────────────────────────────────────────────
 
@@ -70,9 +82,9 @@ const CREDIT_FRAUD_EVENTS: EventDef[] = [
 ]
 
 const CREDIT_SCENARIO_CONFIG: Record<CreditScenario, { failStep: number; events: EventDef[] }> = {
-  success:  { failStep: -1, events: CREDIT_SUCCESS_EVENTS },
-  declined: { failStep: 5,  events: CREDIT_DECLINED_EVENTS },
-  fraud:    { failStep: 3,  events: CREDIT_FRAUD_EVENTS },
+  success: { failStep: -1, events: CREDIT_SUCCESS_EVENTS },
+  declined: { failStep: 5, events: CREDIT_DECLINED_EVENTS },
+  fraud: { failStep: 3, events: CREDIT_FRAUD_EVENTS },
 }
 
 // ── Debit scenarios ───────────────────────────────────────────────────────────
@@ -95,8 +107,8 @@ const DEBIT_INSUFFICIENT_FUNDS_EVENTS: EventDef[] = [
 ]
 
 const DEBIT_SCENARIO_CONFIG: Record<DebitScenario, { failStep: number; events: EventDef[] }> = {
-  success:            { failStep: -1, events: DEBIT_SUCCESS_EVENTS },
-  insufficient_funds: { failStep: 6,  events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
+  success: { failStep: -1, events: DEBIT_SUCCESS_EVENTS },
+  insufficient_funds: { failStep: 6, events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
 }
 
 // ── Module-level timeout tracking ─────────────────────────────────────────────
@@ -161,14 +173,14 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
 
   jumpToStep: (step: number) => {
     clearAllTimeouts()
-    const { flowType } = get()
+    const { flowType, scenario } = get()
     const preCompleted = new Set(Array.from({ length: step }, (_, i) => i))
     set({
       status: 'idle',
       activeStep: -1,
       completedSteps: preCompleted,
       failedStep: -1,
-      selectedNodeId: STEP_NODE_IDS[flowType][step],
+      selectedNodeId: getStepNodeIds(flowType, scenario)[step],
       drawerOpen: true,
     })
   },
@@ -184,7 +196,8 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
       ? CREDIT_SCENARIO_CONFIG[scenario as CreditScenario]
       : DEBIT_SCENARIO_CONFIG[scenario as DebitScenario]
     const { failStep, events: eventList } = config
-    const totalSteps = STEP_NODE_IDS[flowType].length
+    const nodeIds = getStepNodeIds(flowType, scenario)
+    const totalSteps = nodeIds.length
 
     set({
       status: 'running',
@@ -201,7 +214,7 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
         return
       }
 
-      set({ activeStep: step, selectedNodeId: STEP_NODE_IDS[flowType][step] })
+      set({ activeStep: step, selectedNodeId: nodeIds[step] })
 
       const t1 = setTimeout(() => {
         const eventDef = eventList[step]

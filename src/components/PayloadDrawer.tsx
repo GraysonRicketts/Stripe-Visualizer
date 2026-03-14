@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Code2, Clock } from 'lucide-react'
-import { usePaymentStore, STEP_NODE_IDS, type CreditScenario, type DebitScenario } from '../store/paymentStore'
-import { getPayload as getCreditPayload } from '../data/credit/payloads'
-import { getPayload as getDebitPayload } from '../data/debit/payloads'
+import { usePaymentStore, getStepNodeIds, type CreditScenario, type DebitScenario } from '../store/paymentStore'
+import { getPayload as getCreditPayload } from '../data/credit-success/payloads'
+import { getPayload as getDebitPayload } from '../data/debit-success/payloads'
 
 function formatValue(value: unknown, depth = 0): string {
   if (value === null) return 'null'
@@ -41,7 +41,7 @@ function JsonLine({ text }: { text: string }) {
 export function PayloadDrawer() {
   const { flowType, selectedNodeId, scenario, drawerOpen, closeDrawer } = usePaymentStore()
 
-  const stepNodeIds = STEP_NODE_IDS[flowType]
+  const stepNodeIds = getStepNodeIds(flowType, scenario)
   const stepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
   const payload = stepIndex >= 0
     ? flowType === 'credit'

@@ -1,5 +1,5 @@
 import { Play, Square, RotateCcw } from 'lucide-react'
-import { usePaymentStore, STEP_NODE_IDS, type FlowType } from '../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, type FlowType } from '../store/paymentStore'
 
 const STEP_LABELS: Record<FlowType, string[]> = {
   credit: ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Merchant', 'Payout'],
@@ -9,6 +9,7 @@ const STEP_LABELS: Record<FlowType, string[]> = {
 export function TimelineBar() {
   const {
     flowType,
+    scenario,
     status,
     activeStep,
     completedSteps,
@@ -23,7 +24,7 @@ export function TimelineBar() {
   const isRunning = status === 'running'
   const isDone = status === 'complete' || status === 'failed'
 
-  const stepNodeIds = STEP_NODE_IDS[flowType]
+  const stepNodeIds = getStepNodeIds(flowType, scenario)
   const stepLabels = STEP_LABELS[flowType]
   const selectedStepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
 
