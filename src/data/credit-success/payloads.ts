@@ -202,6 +202,58 @@ const DECLINED_PAYLOADS: StepPayload[] = [
       },
     },
   },
+  {
+    title: 'Decline Response — Card Network',
+    object: 'issuing.authorization',
+    timing: '~200–500ms',
+    description: "The Visa network receives the decline response from the issuing bank and routes it back toward Stripe. The decline code (05) travels through the same ISO 8583 channel that carried the original auth request.",
+    data: {
+      network: 'visa',
+      request_id: 'AUTH-1OxK2L-VISA-EXAMPLE',
+      status: 'declined',
+      decline_code: '05',
+      response_code: 'declined_by_network',
+      original_request: {
+        amount: 4900,
+        currency: 'usd',
+        card: { brand: 'visa', last4: '0002' },
+      },
+    },
+  },
+  {
+    title: 'Decline Forwarded — Stripe API',
+    object: 'payment_intent',
+    timing: '~instant',
+    description: "Stripe receives the network decline, updates the Charge and PaymentIntent, and fires a charge.failed webhook to your backend. The PaymentIntent status reverts to 'requires_payment_method', signaling that the customer must try again.",
+    data: {
+      id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
+      object: 'payment_intent',
+      status: 'requires_payment_method',
+      last_payment_error: {
+        code: 'card_declined',
+        decline_code: 'generic_decline',
+        message: 'Your card was declined.',
+        type: 'card_error',
+        charge: 'ch_3OxK2LBLpOGa8XCy0EXAMPLE',
+      },
+    },
+  },
+  {
+    title: 'Card Declined — Customer Notified',
+    object: 'error',
+    timing: '~instant',
+    description: "Stripe.js surfaces the decline error to the browser via the confirmCardPayment() promise rejection. Your frontend receives a structured error object and can display a user-friendly message, prompting the customer to try a different card.",
+    data: {
+      type: 'card_error',
+      code: 'card_declined',
+      decline_code: 'generic_decline',
+      message: 'Your card was declined.',
+      payment_intent: {
+        id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
+        status: 'requires_payment_method',
+      },
+    },
+  },
 ]
 
 const FRAUD_PAYLOADS: StepPayload[] = [
@@ -226,6 +278,41 @@ const FRAUD_PAYLOADS: StepPayload[] = [
         network_status: 'not_sent_to_network',
         reason: 'highest_risk_level',
         seller_message: 'The payment was blocked by Stripe Radar.',
+      },
+    },
+  },
+  {
+    title: 'Fraud Block Response — Stripe API',
+    object: 'payment_intent',
+    timing: '~instant',
+    description: "Stripe's API receives Radar's block decision and updates the PaymentIntent. A radar.early_fraud_warning.created webhook fires. The PaymentIntent status reverts to 'requires_payment_method' — the card network was never contacted.",
+    data: {
+      id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
+      object: 'payment_intent',
+      status: 'requires_payment_method',
+      last_payment_error: {
+        code: 'card_declined',
+        decline_code: 'fraudulent',
+        message: 'The payment was blocked by Stripe Radar.',
+        type: 'card_error',
+        blocked_by: 'stripe_radar',
+      },
+    },
+  },
+  {
+    title: 'Payment Blocked — Customer Notified',
+    object: 'error',
+    timing: '~instant',
+    description: "Stripe.js rejects the confirmCardPayment() promise with a fraud block error. The customer sees a generic decline message — Stripe deliberately avoids revealing that Radar flagged the card, to prevent fraudsters from iterating on detection signals.",
+    data: {
+      type: 'card_error',
+      code: 'card_declined',
+      decline_code: 'fraudulent',
+      message: 'Your card was declined.',
+      blocked_by: 'stripe_radar',
+      payment_intent: {
+        id: 'pi_3OxK2LBLpOGa8XCy0EXAMPLE',
+        status: 'requires_payment_method',
       },
     },
   },

@@ -1,5 +1,5 @@
 import { Handle, Position } from '@xyflow/react'
-import { usePaymentStore, STEP_NODE_IDS } from '../../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, getReturnPathStart } from '../../store/paymentStore'
 import type { NodeData } from '../../data/swimlanes'
 import {
   Monitor,
@@ -35,13 +35,18 @@ interface PaymentNodeProps {
   data: NodeData
 }
 
-export function PaymentNode({ id, data }: PaymentNodeProps) {
-  const { flowType, activeStep, completedSteps, failedStep, status, selectNode } = usePaymentStore()
+export function PaymentNode({ data }: PaymentNodeProps) {
+  const { flowType, scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, status } = usePaymentStore()
   const { label, sublabel, stepIndex, icon, timing } = data
 
   const isActive = activeStep === stepIndex
   const isCompleted = completedSteps.has(stepIndex)
   const isFailed = failedStep === stepIndex
+  const isReturnCompleted = returnCompletedSteps.has(stepIndex)
+
+  const returnPathStart = getReturnPathStart(flowType, scenario)
+  const isReturnPath = returnPathStart !== -1 && stepIndex >= returnPathStart
+  const isReturnActive = isActive && isReturnPath
 
   const IconComponent = ICONS[icon] ?? Monitor
 
@@ -52,7 +57,20 @@ export function PaymentNode({ id, data }: PaymentNodeProps) {
   let glowStyle = {}
   let animStyle: React.CSSProperties = {}
 
-  if (isActive) {
+  if (isReturnActive) {
+    borderColor = 'border-[#f59e0b]/60'
+    bgColor = 'bg-[#1a1500]'
+    iconColor = 'text-[#f59e0b]'
+    labelColor = 'text-[#fcd34d]'
+    glowStyle = { boxShadow: '0 0 14px 3px rgba(245,158,11,0.25)' }
+    animStyle = { animation: 'pulse-glow 1.5s ease-in-out infinite' }
+  } else if (isReturnCompleted) {
+    borderColor = 'border-[#f59e0b]/60'
+    bgColor = 'bg-[#1a1500]'
+    iconColor = 'text-[#f59e0b]'
+    labelColor = 'text-[#fcd34d]'
+    glowStyle = { boxShadow: '0 0 8px 2px rgba(245,158,11,0.15)' }
+  } else if (isActive) {
     borderColor = 'border-[#635bff]'
     bgColor = 'bg-[#1a1b2e]'
     iconColor = 'text-[#635bff]'
@@ -73,9 +91,10 @@ export function PaymentNode({ id, data }: PaymentNodeProps) {
     labelColor = 'text-slate-300'
   }
 
-  const clickable = isCompleted || isActive || isFailed
+  const clickable = isCompleted || isActive || isFailed || isReturnCompleted
+  const stepNodeIds = getStepNodeIds(flowType, scenario)
   const isFirst = stepIndex === 0
-  const isLast = stepIndex === STEP_NODE_IDS[flowType].length - 1
+  const isLast = stepIndex === stepNodeIds.length - 1
 
   return (
     <div
@@ -92,7 +111,7 @@ export function PaymentNode({ id, data }: PaymentNodeProps) {
 
       <div className="flex items-center gap-3">
         {/* Icon */}
-        <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-[#0a0b14] border border-[#1e2235] ${isActive ? 'border-[#635bff]/40' : ''}`}>
+        <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-[#0a0b14] border border-[#1e2235] ${isReturnActive ? 'border-[#f59e0b]/40' : isActive ? 'border-[#635bff]/40' : ''}`}>
           <IconComponent className={`w-4 h-4 ${iconColor}`} />
         </div>
 
@@ -102,23 +121,29 @@ export function PaymentNode({ id, data }: PaymentNodeProps) {
             {label}
           </div>
           <div className="text-xs text-slate-600 mt-0.5 truncate">{sublabel}</div>
-          {timing && (isActive || isCompleted) && (
+          {timing && (isActive || isCompleted || isReturnActive || isReturnCompleted) && (
             <div className="text-[10px] font-mono mt-0.5 text-[#f59e0b]/70 tabular-nums">{timing}</div>
           )}
         </div>
 
         {/* Status badge */}
         <div className="flex-shrink-0">
-          {isActive && (
+          {isReturnActive && (
+            <Loader2 className="w-4 h-4 text-[#f59e0b] animate-spin" />
+          )}
+          {!isReturnActive && isActive && (
             <Loader2 className="w-4 h-4 text-[#635bff] animate-spin" />
           )}
-          {isCompleted && (
+          {isReturnCompleted && (
+            <CheckCircle2 className="w-4 h-4 text-[#f59e0b]" />
+          )}
+          {!isReturnCompleted && isCompleted && (
             <CheckCircle2 className="w-4 h-4 text-[#00d4a0]" />
           )}
           {isFailed && (
             <XCircle className="w-4 h-4 text-[#ff4757]" />
           )}
-          {!isActive && !isCompleted && !isFailed && status !== 'idle' && (
+          {!isActive && !isCompleted && !isFailed && !isReturnCompleted && status !== 'idle' && (
             <div className="w-2 h-2 rounded-full bg-slate-700" />
           )}
         </div>

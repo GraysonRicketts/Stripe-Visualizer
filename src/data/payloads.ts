@@ -1,2 +1,2 @@
-// Deprecated — use src/data/credit/payloads.ts or src/data/debit/payloads.ts
-export * from './credit/payloads'
+// Deprecated — use src/data/credit-success/payloads.ts
+export * from './credit-success/payloads'

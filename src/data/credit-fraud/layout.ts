@@ -3,7 +3,7 @@ import { NODE_X, Y, buildSwimlaneNodes } from '../swimlanes'
 
 export type { NodeData } from '../swimlanes'
 
-const BG_HEIGHT = 1500 // covers 8 steps + time chasm + header + padding
+const BG_HEIGHT = 1100 // covers 6 steps + header + padding
 
 const FLOW_NODES: Node[] = [
   {
@@ -30,56 +30,30 @@ const FLOW_NODES: Node[] = [
     position: { x: NODE_X.stripe, y: Y(3) },
     data: { label: 'Stripe Radar', sublabel: 'ML fraud scoring', stepIndex: 3, icon: 'radar', timing: '~100–300ms' },
   },
+  // ── Return path (yellow) ───────────────────────────────────────────────────
   {
-    id: 'network',
+    id: 'stripe-api-return',
     type: 'paymentNode',
-    position: { x: NODE_X.network, y: Y(4) },
-    data: { label: 'Card Network', sublabel: 'Visa / Mastercard routing', stepIndex: 4, icon: 'network', timing: '~500ms–2s' },
+    position: { x: NODE_X.stripe, y: Y(4) },
+    data: { label: 'Fraud Blocked', sublabel: 'Radar blocks payment, response sent', stepIndex: 4, icon: 'server', timing: '~instant' },
   },
   {
-    id: 'bank',
+    id: 'customer-return',
     type: 'paymentNode',
-    position: { x: NODE_X.bank, y: Y(5) },
-    data: { label: 'Issuing Bank', sublabel: 'Authorization decision', stepIndex: 5, icon: 'bank', timing: '~1–3s' },
-  },
-  {
-    id: 'merchant',
-    type: 'paymentNode',
-    position: { x: NODE_X.stripe, y: Y(6) },
-    data: { label: 'Capture', sublabel: 'Authorized funds acquired', stepIndex: 6, icon: 'store', timing: '~instant (automatic)' },
-  },
-  {
-    id: 'payout',
-    type: 'paymentNode',
-    position: { x: NODE_X.stripe, y: Y(8) },
-    data: { label: 'Payout Engine', sublabel: 'T+2 bank transfer', stepIndex: 7, icon: 'payout', timing: '2–3 business days' },
+    position: { x: NODE_X.customer, y: Y(5) },
+    data: { label: 'Payment Blocked', sublabel: 'Error surfaced to cardholder', stepIndex: 5, icon: 'monitor', timing: '~instant' },
   },
 ]
-
-const TIME_CHASM: Node = {
-  id: 'time-chasm',
-  type: 'timeChasmNode',
-  position: { x: NODE_X.stripe, y: Y(7) },
-  zIndex: 0,
-  selectable: false,
-  draggable: false,
-  focusable: false,
-  data: { label: '2–3 business days', sublabel: 'settlement & reconciliation' },
-}
 
 export const NODES: Node[] = [
   ...buildSwimlaneNodes(BG_HEIGHT, 'Card Network'),
   ...FLOW_NODES,
-  TIME_CHASM,
 ]
 
 export const EDGES: Edge[] = [
-  { id: 'e0-1',  source: 'customer',    target: 'stripe-js',  label: 'raw card data' },
-  { id: 'e1-2',  source: 'stripe-js',   target: 'stripe-api', label: 'secure token' },
-  { id: 'e2-3',  source: 'stripe-api',  target: 'radar',      label: 'payment_intent' },
-  { id: 'e3-4',  source: 'radar',       target: 'network',    label: 'auth request' },
-  { id: 'e4-5',  source: 'network',     target: 'bank',       label: 'ISO 8583 auth' },
-  { id: 'e5-6',  source: 'bank',        target: 'merchant',   label: 'auth approved' },
-  { id: 'e6-tc', source: 'merchant',    target: 'time-chasm', label: 'capture complete' },
-  { id: 'etc-7', source: 'time-chasm',  target: 'payout',     label: 'settlement' },
+  { id: 'e0-1', source: 'customer',         target: 'stripe-js',        label: 'raw card data' },
+  { id: 'e1-2', source: 'stripe-js',        target: 'stripe-api',       label: 'secure token' },
+  { id: 'e2-3', source: 'stripe-api',       target: 'radar',            label: 'payment_intent' },
+  { id: 'e3-4', source: 'radar',            target: 'stripe-api-return', label: 'fraud block' },
+  { id: 'e4-5', source: 'stripe-api-return', target: 'customer-return', label: 'blocked' },
 ]

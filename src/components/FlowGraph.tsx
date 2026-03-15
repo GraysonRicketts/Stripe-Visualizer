@@ -9,8 +9,9 @@ import {
   type Node,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { usePaymentStore, getStepNodeIds, type CreditScenario, type DebitScenario } from '../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, getReturnPathStart, type CreditScenario, type DebitScenario } from '../store/paymentStore'
 import { NODES as CREDIT_SUCCESS_NODES, EDGES as CREDIT_SUCCESS_EDGES } from '../data/credit-success/layout'
+import { NODES as CREDIT_DECLINED_NODES, EDGES as CREDIT_DECLINED_EDGES } from '../data/credit-declined/layout'
 import { NODES as CREDIT_FRAUD_NODES, EDGES as CREDIT_FRAUD_EDGES } from '../data/credit-fraud/layout'
 import { NODES as DEBIT_SUCCESS_NODES, EDGES as DEBIT_SUCCESS_EDGES } from '../data/debit-success/layout'
 import { PaymentNode } from './nodes/PaymentNode'
@@ -27,29 +28,29 @@ const nodeTypes: NodeTypes = {
 const NODES_DICT: { credit: Record<CreditScenario, Node[]>, debit: Record<DebitScenario, Node[]> } = {
   credit: {
     success: CREDIT_SUCCESS_NODES,
+    declined: CREDIT_DECLINED_NODES,
     fraud: CREDIT_FRAUD_NODES,
-    declined: CREDIT_SUCCESS_NODES,  // same nodes as success, just different edge styling
   },
   debit: {
     success: DEBIT_SUCCESS_NODES,
-    insufficient_funds: DEBIT_SUCCESS_NODES,  // same nodes as success, just different edge styling
+    insufficient_funds: DEBIT_SUCCESS_NODES,
   },
 }
 
 const EDGES_DICT: { credit: Record<CreditScenario, Edge[]>, debit: Record<DebitScenario, Edge[]> } = {
   credit: {
     success: CREDIT_SUCCESS_EDGES,
+    declined: CREDIT_DECLINED_EDGES,
     fraud: CREDIT_FRAUD_EDGES,
-    declined: CREDIT_SUCCESS_EDGES,  // same edges as success, just different styling
   },
   debit: {
     success: DEBIT_SUCCESS_EDGES,
-    insufficient_funds: DEBIT_SUCCESS_EDGES,  // same edges as success, just different styling
+    insufficient_funds: DEBIT_SUCCESS_EDGES,
   },
 }
 
 export function FlowGraph() {
-  const { flowType, scenario, activeStep, completedSteps, failedStep, selectNode } = usePaymentStore()
+  const { flowType, scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, selectNode } = usePaymentStore()
 
   const allNodes = flowType === 'credit'
     ? NODES_DICT.credit[scenario as CreditScenario]
@@ -58,6 +59,7 @@ export function FlowGraph() {
     ? EDGES_DICT.credit[scenario as CreditScenario]
     : EDGES_DICT.debit[scenario as DebitScenario]
   const stepNodeIds = getStepNodeIds(flowType, scenario)
+  const returnPathStart = getReturnPathStart(flowType, scenario)
 
   const edges = useMemo<Edge[]>(() => {
     return baseEdges.map((edge) => {
@@ -68,11 +70,28 @@ export function FlowGraph() {
       const isActive = activeStep === sourceIndex + 1 || activeStep === sourceIndex
       const isFailed = failedStep === sourceIndex + 1
 
+      // Return-path edge: both endpoints are in the return path
+      const isReturnCompleted = returnPathStart !== -1
+        && returnCompletedSteps.has(sourceIndex)
+        && returnCompletedSteps.has(sourceIndex + 1)
+      // The edge leading INTO the return path (from failedStep to first return node)
+      const isReturnEntryCompleted = returnPathStart !== -1
+        && failedStep === sourceIndex
+        && returnCompletedSteps.has(sourceIndex + 1)
+      const isReturnActive = returnPathStart !== -1
+        && (activeStep === sourceIndex || activeStep === sourceIndex + 1)
+        && sourceIndex + 1 >= returnPathStart
+
       let stroke = '#1e2235'
       let animated = false
 
-      if (isFailed) {
+      if (isFailed && !isReturnActive && !isReturnCompleted && !isReturnEntryCompleted) {
         stroke = '#ff4757'
+      } else if (isReturnCompleted || isReturnEntryCompleted) {
+        stroke = '#f59e0b'
+      } else if (isReturnActive) {
+        stroke = '#f59e0b'
+        animated = true
       } else if (isCompleted) {
         stroke = '#00d4a0'
         animated = false
@@ -106,7 +125,7 @@ export function FlowGraph() {
         },
       }
     })
-  }, [flowType, baseEdges, stepNodeIds, activeStep, completedSteps, failedStep])
+  }, [flowType, baseEdges, stepNodeIds, returnPathStart, activeStep, completedSteps, returnCompletedSteps, failedStep])
 
   return (
     <div className="w-full h-full">
@@ -120,7 +139,7 @@ export function FlowGraph() {
           if (node.type !== 'paymentNode') return
           const stepIndex = stepNodeIds.indexOf(node.id)
           if (stepIndex === -1) return
-          if (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex) {
+          if (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex || returnCompletedSteps.has(stepIndex)) {
             selectNode(node.id)
           }
         }}

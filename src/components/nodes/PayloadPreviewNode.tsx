@@ -1,8 +1,8 @@
 import { Handle, Position } from '@xyflow/react'
 import { Code2, ChevronRight } from 'lucide-react'
-import { usePaymentStore, STEP_NODE_IDS, type CreditScenario, type DebitScenario } from '../../store/paymentStore'
-import { getPayload as getCreditPayload } from '../../data/credit/payloads'
-import { getPayload as getDebitPayload } from '../../data/debit/payloads'
+import { usePaymentStore, getStepNodeIds, type CreditScenario, type DebitScenario } from '../../store/paymentStore'
+import { getPayload as getCreditPayload } from '../../data/credit-success/payloads'
+import { getPayload as getDebitPayload } from '../../data/debit-success/payloads'
 
 function compactEntries(data: Record<string, unknown>): Array<{ key: string; val: string }> {
   return Object.entries(data).slice(0, 4).map(([k, v]) => {
@@ -19,7 +19,7 @@ function compactEntries(data: Record<string, unknown>): Array<{ key: string; val
 export function PayloadPreviewNode() {
   const { flowType, selectedNodeId, scenario, completedSteps, activeStep, failedStep, openDrawer } = usePaymentStore()
 
-  const stepNodeIds = STEP_NODE_IDS[flowType]
+  const stepNodeIds = getStepNodeIds(flowType, scenario)
   const stepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
   const hasContent =
     stepIndex !== -1 &&

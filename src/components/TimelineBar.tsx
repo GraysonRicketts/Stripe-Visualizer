@@ -1,9 +1,17 @@
 import { Play, Square, RotateCcw } from 'lucide-react'
-import { usePaymentStore, getStepNodeIds, type FlowType } from '../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, getReturnPathStart, type FlowType, type Scenario } from '../store/paymentStore'
 
-const STEP_LABELS: Record<FlowType, string[]> = {
-  credit: ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Merchant', 'Payout'],
-  debit:  ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Merchant', 'ACH'],
+function getStepLabels(flowType: FlowType, scenario: Scenario): string[] {
+  if (flowType === 'debit') {
+    return ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Merchant', 'ACH']
+  }
+  if (scenario === 'declined') {
+    return ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Net↩', 'API↩', 'Declined']
+  }
+  if (scenario === 'fraud') {
+    return ['Browser', 'Stripe.js', 'API', 'Radar', 'API↩', 'Blocked']
+  }
+  return ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Merchant', 'Payout']
 }
 
 export function TimelineBar() {
@@ -13,6 +21,7 @@ export function TimelineBar() {
     status,
     activeStep,
     completedSteps,
+    returnCompletedSteps,
     failedStep,
     selectedNodeId,
     play,
@@ -25,7 +34,8 @@ export function TimelineBar() {
   const isDone = status === 'complete' || status === 'failed'
 
   const stepNodeIds = getStepNodeIds(flowType, scenario)
-  const stepLabels = STEP_LABELS[flowType]
+  const stepLabels = getStepLabels(flowType, scenario)
+  const returnPathStart = getReturnPathStart(flowType, scenario)
   const selectedStepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
 
   function handlePlayButton() {
@@ -41,7 +51,12 @@ export function TimelineBar() {
 
   function getNodeStyle(i: number): { bg: string; border: string; ring: boolean; pulse: boolean } {
     if (failedStep === i) return { bg: '#ff4757', border: '#ff4757', ring: false, pulse: false }
-    if (activeStep === i) return { bg: '#635bff', border: '#635bff', ring: false, pulse: true }
+    if (returnCompletedSteps.has(i)) return { bg: '#f59e0b', border: '#f59e0b', ring: false, pulse: false }
+    if (activeStep === i) {
+      const isReturnActive = returnPathStart !== -1 && i >= returnPathStart
+      const color = isReturnActive ? '#f59e0b' : '#635bff'
+      return { bg: color, border: color, ring: false, pulse: true }
+    }
     if (completedSteps.has(i)) return { bg: '#00d4a0', border: '#00d4a0', ring: false, pulse: false }
     if (selectedStepIndex === i && !isRunning) return { bg: 'transparent', border: '#635bff', ring: true, pulse: false }
     return { bg: '#1e2235', border: '#1e2235', ring: false, pulse: false }
@@ -49,7 +64,18 @@ export function TimelineBar() {
 
   function getConnectorColor(i: number): string {
     // connector between node i and i+1
-    if (failedStep === i + 1 || failedStep === i) return '#ff4757'
+    const nextIsReturnPath = returnPathStart !== -1 && i + 1 >= returnPathStart
+    const currentIsReturnPath = returnPathStart !== -1 && i >= returnPathStart
+
+    if (failedStep === i + 1 && !nextIsReturnPath) return '#ff4757'
+    if (failedStep === i && !currentIsReturnPath) return '#ff4757'
+
+    if (returnCompletedSteps.has(i) && returnCompletedSteps.has(i + 1)) return '#f59e0b'
+    // Entry edge from failedStep into first return-path node
+    if (failedStep === i && returnCompletedSteps.has(i + 1)) return '#f59e0b'
+    if (activeStep === i && nextIsReturnPath) return '#f59e0b'
+    if (activeStep === i + 1 && nextIsReturnPath) return '#f59e0b'
+
     if (completedSteps.has(i) && (completedSteps.has(i + 1) || activeStep === i + 1)) return '#00d4a0'
     if (activeStep === i) return '#635bff'
     return '#1e2235'
