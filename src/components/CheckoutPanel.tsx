@@ -7,7 +7,6 @@ const SCENARIOS: { value: CombinedScenario; label: string; color: string; desc: 
   { value: 'debit-success',            label: 'Debit Card — Success',            color: '#00d4a0', desc: 'Debit authorized and settled via ACH' },
   { value: 'debit-insufficient-funds', label: 'Debit Card — Insufficient Funds', color: '#ff4757', desc: 'Balance check fails at issuing bank' },
   { value: 'credit-dispute-won',       label: 'Dispute — Merchant Wins',         color: '#00d4a0', desc: 'Merchant submits evidence and wins' },
-  { value: 'credit-dispute-lost',      label: 'Dispute — Merchant Loses',        color: '#ff4757', desc: 'Issuer rules in favor of cardholder' },
 ]
 
 export function CheckoutPanel() {

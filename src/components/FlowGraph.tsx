@@ -16,7 +16,6 @@ import { NODES as CREDIT_FRAUD_NODES, EDGES as CREDIT_FRAUD_EDGES } from '../dat
 import { NODES as DEBIT_SUCCESS_NODES, EDGES as DEBIT_SUCCESS_EDGES } from '../data/debit-success/layout'
 import { NODES as DEBIT_INSUFFICIENT_FUNDS_NODES, EDGES as DEBIT_INSUFFICIENT_FUNDS_EDGES } from '../data/debit-insufficient-funds/layout'
 import { NODES as DISPUTE_WON_NODES, EDGES as DISPUTE_WON_EDGES } from '../data/credit-dispute-won/layout'
-import { NODES as DISPUTE_LOST_NODES, EDGES as DISPUTE_LOST_EDGES } from '../data/credit-dispute-lost/layout'
 import { PaymentNode } from './nodes/PaymentNode'
 import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
 import { TimeChasmNode } from './nodes/TimeChasmNode'
@@ -35,7 +34,6 @@ const NODES_DICT: Record<CombinedScenario, Node[]> = {
   'debit-success':             DEBIT_SUCCESS_NODES,
   'debit-insufficient-funds':  DEBIT_INSUFFICIENT_FUNDS_NODES,
   'credit-dispute-won':        DISPUTE_WON_NODES,
-  'credit-dispute-lost':       DISPUTE_LOST_NODES,
 }
 
 const EDGES_DICT: Record<CombinedScenario, Edge[]> = {
@@ -45,7 +43,6 @@ const EDGES_DICT: Record<CombinedScenario, Edge[]> = {
   'debit-success':             DEBIT_SUCCESS_EDGES,
   'debit-insufficient-funds':  DEBIT_INSUFFICIENT_FUNDS_EDGES,
   'credit-dispute-won':        DISPUTE_WON_EDGES,
-  'credit-dispute-lost':       DISPUTE_LOST_EDGES,
 }
 
 export function FlowGraph() {
