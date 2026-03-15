@@ -1,6 +1,6 @@
 import { Handle, Position } from '@xyflow/react'
 import { Code2, ChevronRight } from 'lucide-react'
-import { usePaymentStore, getStepNodeIds, type CreditScenario, type DebitScenario } from '../../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, toCreditScenario, toDebitScenario } from '../../store/paymentStore'
 import { getPayload as getCreditPayload } from '../../data/credit-success/payloads'
 import { getPayload as getDebitPayload } from '../../data/debit-success/payloads'
 
@@ -17,17 +17,17 @@ function compactEntries(data: Record<string, unknown>): Array<{ key: string; val
 }
 
 export function PayloadPreviewNode() {
-  const { flowType, selectedNodeId, scenario, completedSteps, activeStep, failedStep, openDrawer } = usePaymentStore()
+  const { selectedNodeId, scenario, completedSteps, activeStep, failedStep, openDrawer } = usePaymentStore()
 
-  const stepNodeIds = getStepNodeIds(flowType, scenario)
+  const stepNodeIds = getStepNodeIds(scenario)
   const stepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
   const hasContent =
     stepIndex !== -1 &&
     (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex)
   const payload = hasContent
-    ? flowType === 'credit'
-      ? getCreditPayload(stepIndex, scenario as CreditScenario)
-      : getDebitPayload(stepIndex, scenario as DebitScenario)
+    ? scenario.startsWith('credit-')
+      ? getCreditPayload(stepIndex, toCreditScenario(scenario))
+      : getDebitPayload(stepIndex, toDebitScenario(scenario))
     : null
 
   return (

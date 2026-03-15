@@ -9,7 +9,7 @@ import {
   type Node,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { usePaymentStore, getStepNodeIds, getReturnPathStart, type CreditScenario, type DebitScenario } from '../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, getReturnPathStart, type CombinedScenario } from '../store/paymentStore'
 import { NODES as CREDIT_SUCCESS_NODES, EDGES as CREDIT_SUCCESS_EDGES } from '../data/credit-success/layout'
 import { NODES as CREDIT_DECLINED_NODES, EDGES as CREDIT_DECLINED_EDGES } from '../data/credit-declined/layout'
 import { NODES as CREDIT_FRAUD_NODES, EDGES as CREDIT_FRAUD_EDGES } from '../data/credit-fraud/layout'
@@ -26,41 +26,29 @@ const nodeTypes: NodeTypes = {
   timeChasmNode: TimeChasmNode as unknown as NodeTypes[string],
 }
 
-const NODES_DICT: { credit: Record<CreditScenario, Node[]>, debit: Record<DebitScenario, Node[]> } = {
-  credit: {
-    success: CREDIT_SUCCESS_NODES,
-    declined: CREDIT_DECLINED_NODES,
-    fraud: CREDIT_FRAUD_NODES,
-  },
-  debit: {
-    success: DEBIT_SUCCESS_NODES,
-    insufficient_funds: DEBIT_INSUFFICIENT_FUNDS_NODES,
-  },
+const NODES_DICT: Record<CombinedScenario, Node[]> = {
+  'credit-success':            CREDIT_SUCCESS_NODES,
+  'credit-declined':           CREDIT_DECLINED_NODES,
+  'credit-fraud':              CREDIT_FRAUD_NODES,
+  'debit-success':             DEBIT_SUCCESS_NODES,
+  'debit-insufficient-funds':  DEBIT_INSUFFICIENT_FUNDS_NODES,
 }
 
-const EDGES_DICT: { credit: Record<CreditScenario, Edge[]>, debit: Record<DebitScenario, Edge[]> } = {
-  credit: {
-    success: CREDIT_SUCCESS_EDGES,
-    declined: CREDIT_DECLINED_EDGES,
-    fraud: CREDIT_FRAUD_EDGES,
-  },
-  debit: {
-    success: DEBIT_SUCCESS_EDGES,
-    insufficient_funds: DEBIT_INSUFFICIENT_FUNDS_EDGES,
-  },
+const EDGES_DICT: Record<CombinedScenario, Edge[]> = {
+  'credit-success':            CREDIT_SUCCESS_EDGES,
+  'credit-declined':           CREDIT_DECLINED_EDGES,
+  'credit-fraud':              CREDIT_FRAUD_EDGES,
+  'debit-success':             DEBIT_SUCCESS_EDGES,
+  'debit-insufficient-funds':  DEBIT_INSUFFICIENT_FUNDS_EDGES,
 }
 
 export function FlowGraph() {
-  const { flowType, scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, selectNode } = usePaymentStore()
+  const { scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, selectNode } = usePaymentStore()
 
-  const allNodes = flowType === 'credit'
-    ? NODES_DICT.credit[scenario as CreditScenario]
-    : NODES_DICT.debit[scenario as DebitScenario]
-  const baseEdges = flowType === 'credit'
-    ? EDGES_DICT.credit[scenario as CreditScenario]
-    : EDGES_DICT.debit[scenario as DebitScenario]
-  const stepNodeIds = getStepNodeIds(flowType, scenario)
-  const returnPathStart = getReturnPathStart(flowType, scenario)
+  const allNodes = NODES_DICT[scenario]
+  const baseEdges = EDGES_DICT[scenario]
+  const stepNodeIds = getStepNodeIds(scenario)
+  const returnPathStart = getReturnPathStart(scenario)
 
   const edges = useMemo<Edge[]>(() => {
     return baseEdges.map((edge) => {
@@ -126,7 +114,7 @@ export function FlowGraph() {
         },
       }
     })
-  }, [flowType, baseEdges, stepNodeIds, returnPathStart, activeStep, completedSteps, returnCompletedSteps, failedStep])
+  }, [baseEdges, stepNodeIds, returnPathStart, activeStep, completedSteps, returnCompletedSteps, failedStep])
 
   return (
     <div className="w-full h-full">

@@ -2,10 +2,27 @@ import { create } from 'zustand'
 import type { CreditScenario } from '../data/credit-success/payloads'
 import type { DebitScenario } from '../data/debit-success/payloads'
 
-export type { CreditScenario, DebitScenario }
-export type FlowType = 'credit' | 'debit'
-export type Scenario = CreditScenario | DebitScenario
+export type CombinedScenario =
+  | 'credit-success'
+  | 'credit-declined'
+  | 'credit-fraud'
+  | 'debit-success'
+  | 'debit-insufficient-funds'
+
 export type PaymentStatus = 'idle' | 'running' | 'complete' | 'failed'
+
+export function getFlowType(s: CombinedScenario): 'credit' | 'debit' {
+  return s.startsWith('credit-') ? 'credit' : 'debit'
+}
+
+export function toCreditScenario(s: CombinedScenario): CreditScenario {
+  return s.replace('credit-', '') as CreditScenario
+}
+
+export function toDebitScenario(s: CombinedScenario): DebitScenario {
+  if (s === 'debit-success') return 'success'
+  return 'insufficient_funds'
+}
 
 export interface WebhookEvent {
   id: string
@@ -15,8 +32,7 @@ export interface WebhookEvent {
 }
 
 interface PaymentStore {
-  flowType: FlowType
-  scenario: Scenario
+  scenario: CombinedScenario
   activeStep: number   // -1 = none active
   completedSteps: Set<number>
   returnCompletedSteps: Set<number>
@@ -26,8 +42,7 @@ interface PaymentStore {
   events: WebhookEvent[]
   drawerOpen: boolean
 
-  setFlowType: (f: FlowType) => void
-  setScenario: (s: Scenario) => void
+  setScenario: (s: CombinedScenario) => void
   play: (fromStep: number) => void
   stopPlay: () => void
   jumpToStep: (step: number) => void
@@ -40,26 +55,17 @@ interface PaymentStore {
 const STEP_DURATION = 900  // ms each step takes to "process"
 const STEP_PAUSE = 400     // ms between steps
 
-export const STEP_NODE_IDS: { credit: Record<CreditScenario, string[]>, debit: Record<DebitScenario, string[]> } = {
-  credit: {
-    success: ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'merchant', 'payout'],
-    declined: ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'network-return', 'stripe-api-return', 'customer-return'],
-    fraud: ['customer', 'stripe-js', 'stripe-api', 'radar', 'stripe-api-return', 'customer-return'],
-  },
-  debit: {
-    success: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
-    insufficient_funds: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'debit-network-return', 'stripe-api-return', 'customer-return'],
-  },
+export const STEP_NODE_IDS: Record<CombinedScenario, string[]> = {
+  'credit-success':            ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'merchant', 'payout'],
+  'credit-declined':           ['customer', 'stripe-js', 'stripe-api', 'radar', 'network', 'bank', 'network-return', 'stripe-api-return', 'customer-return'],
+  'credit-fraud':              ['customer', 'stripe-js', 'stripe-api', 'radar', 'stripe-api-return', 'customer-return'],
+  'debit-success':             ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
+  'debit-insufficient-funds':  ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'debit-network-return', 'stripe-api-return', 'customer-return'],
 }
 
 type EventDef = { label: string; sublabel: string }
 
-export function getStepNodeIds(flowType: FlowType, scenario: Scenario): string[] {
-  if (flowType === 'credit') return STEP_NODE_IDS.credit[scenario as CreditScenario]
-  return STEP_NODE_IDS.debit[scenario as DebitScenario]
-}
-
-// ── Credit scenarios ──────────────────────────────────────────────────────────
+// ── Credit events ─────────────────────────────────────────────────────────────
 
 const CREDIT_SUCCESS_EVENTS: EventDef[] = [
   { label: 'payment_method.created', sublabel: 'PAN vaulted, token pm_xxx issued' },
@@ -87,13 +93,7 @@ const CREDIT_FRAUD_EVENTS: EventDef[] = [
   { label: 'payment_intent.payment_failed', sublabel: 'status: requires_payment_method, blocked_by: radar' },
 ]
 
-const CREDIT_SCENARIO_CONFIG: Record<CreditScenario, { failStep: number; returnPathStart: number; events: EventDef[] }> = {
-  success:  { failStep: -1, returnPathStart: -1, events: CREDIT_SUCCESS_EVENTS },
-  declined: { failStep: 5,  returnPathStart: 6,  events: CREDIT_DECLINED_EVENTS },
-  fraud:    { failStep: 3,  returnPathStart: 4,  events: CREDIT_FRAUD_EVENTS },
-}
-
-// ── Debit scenarios ───────────────────────────────────────────────────────────
+// ── Debit events ──────────────────────────────────────────────────────────────
 
 const DEBIT_SUCCESS_EVENTS: EventDef[] = [
   { label: 'payment_method.created', sublabel: 'PAN vaulted, debit token pm_xxx issued' },
@@ -115,14 +115,22 @@ const DEBIT_INSUFFICIENT_FUNDS_EVENTS: EventDef[] = [
   { label: 'payment_intent.payment_failed', sublabel: 'status: requires_payment_method, last_error: insufficient_funds' },
 ]
 
-const DEBIT_SCENARIO_CONFIG: Record<DebitScenario, { failStep: number; returnPathStart: number; events: EventDef[] }> = {
-  success:             { failStep: -1, returnPathStart: -1, events: DEBIT_SUCCESS_EVENTS },
-  insufficient_funds:  { failStep: 6,  returnPathStart: 7,  events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
+// ── Scenario config ───────────────────────────────────────────────────────────
+
+const SCENARIO_CONFIG: Record<CombinedScenario, { failStep: number; returnPathStart: number; events: EventDef[] }> = {
+  'credit-success':            { failStep: -1, returnPathStart: -1, events: CREDIT_SUCCESS_EVENTS },
+  'credit-declined':           { failStep: 5,  returnPathStart: 6,  events: CREDIT_DECLINED_EVENTS },
+  'credit-fraud':              { failStep: 3,  returnPathStart: 4,  events: CREDIT_FRAUD_EVENTS },
+  'debit-success':             { failStep: -1, returnPathStart: -1, events: DEBIT_SUCCESS_EVENTS },
+  'debit-insufficient-funds':  { failStep: 6,  returnPathStart: 7,  events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
 }
 
-export function getReturnPathStart(flowType: FlowType, scenario: Scenario): number {
-  if (flowType === 'credit') return CREDIT_SCENARIO_CONFIG[scenario as CreditScenario].returnPathStart
-  return DEBIT_SCENARIO_CONFIG[scenario as DebitScenario].returnPathStart
+export function getStepNodeIds(scenario: CombinedScenario): string[] {
+  return STEP_NODE_IDS[scenario]
+}
+
+export function getReturnPathStart(scenario: CombinedScenario): number {
+  return SCENARIO_CONFIG[scenario].returnPathStart
 }
 
 // ── Module-level timeout tracking ─────────────────────────────────────────────
@@ -136,8 +144,7 @@ function clearAllTimeouts() {
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 export const usePaymentStore = create<PaymentStore>((set, get) => ({
-  flowType: 'credit',
-  scenario: 'success',
+  scenario: 'credit-success',
   activeStep: -1,
   completedSteps: new Set(),
   returnCompletedSteps: new Set(),
@@ -147,11 +154,12 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
   events: [],
   drawerOpen: true,
 
-  setFlowType: (flowType) => {
+  setScenario: (scenario) => {
+    const { status } = get()
+    if (status === 'running') return
     clearAllTimeouts()
     set({
-      flowType,
-      scenario: 'success',
+      scenario,
       activeStep: -1,
       completedSteps: new Set(),
       returnCompletedSteps: new Set(),
@@ -161,12 +169,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
       events: [],
       drawerOpen: true,
     })
-  },
-
-  setScenario: (scenario) => {
-    const { status } = get()
-    if (status === 'running') return
-    set({ scenario })
   },
 
   reset: () => {
@@ -190,17 +192,15 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
 
   jumpToStep: (step: number) => {
     clearAllTimeouts()
-    const { flowType, scenario } = get()
-    const nodeIds = getStepNodeIds(flowType, scenario)
-    const returnPathStart = getReturnPathStart(flowType, scenario)
+    const { scenario } = get()
+    const nodeIds = getStepNodeIds(scenario)
+    const returnPathStart = getReturnPathStart(scenario)
 
     let completedSteps: Set<number>
     let returnCompletedSteps: Set<number>
     let failedStep = -1
 
     if (returnPathStart !== -1 && step >= returnPathStart) {
-      // Jumping into the return path: forward steps up to failStep-1 are teal,
-      // fail step is red, return steps up to (but not including) the target are yellow
       const failStep = returnPathStart - 1
       completedSteps = new Set(Array.from({ length: failStep }, (_, i) => i))
       failedStep = failStep
@@ -222,17 +222,14 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
   },
 
   play: (fromStep: number) => {
-    const { status, scenario, flowType } = get()
+    const { status, scenario } = get()
     if (status === 'running') return
 
     clearAllTimeouts()
 
     const preCompleted = new Set(Array.from({ length: fromStep }, (_, i) => i))
-    const config = flowType === 'credit'
-      ? CREDIT_SCENARIO_CONFIG[scenario as CreditScenario]
-      : DEBIT_SCENARIO_CONFIG[scenario as DebitScenario]
-    const { failStep, returnPathStart, events: eventList } = config
-    const nodeIds = getStepNodeIds(flowType, scenario)
+    const { failStep, returnPathStart, events: eventList } = SCENARIO_CONFIG[scenario]
+    const nodeIds = getStepNodeIds(scenario)
     const totalSteps = nodeIds.length
 
     set({
@@ -247,7 +244,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
 
     const runStep = (step: number) => {
       if (step >= totalSteps) {
-        // All steps done — terminal status depends on whether there was a fail
         set({ status: failStep !== -1 ? 'failed' : 'complete', activeStep: -1 })
         return
       }
@@ -271,7 +267,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
         }
 
         if (step === failStep) {
-          // Mark failed but do NOT stop — continue through return path
           set({ failedStep: step, activeStep: -1 })
           const t2 = setTimeout(() => runStep(step + 1), STEP_PAUSE)
           activeTimeouts.push(t2)
@@ -279,13 +274,11 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
         }
 
         if (returnPathStart !== -1 && step >= returnPathStart) {
-          // Return path step — goes into returnCompletedSteps (yellow)
           set((state) => ({
             returnCompletedSteps: new Set([...state.returnCompletedSteps, step]),
             activeStep: -1,
           }))
         } else {
-          // Normal forward step — goes into completedSteps (teal)
           set((state) => ({
             completedSteps: new Set([...state.completedSteps, step]),
             activeStep: -1,

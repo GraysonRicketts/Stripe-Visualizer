@@ -1,17 +1,17 @@
 import { Play, Square, RotateCcw } from 'lucide-react'
-import { usePaymentStore, getStepNodeIds, getReturnPathStart, type FlowType, type Scenario } from '../store/paymentStore'
+import { usePaymentStore, getStepNodeIds, getReturnPathStart, type CombinedScenario } from '../store/paymentStore'
 
-function getStepLabels(flowType: FlowType, scenario: Scenario): string[] {
-  if (flowType === 'debit') {
-    if (scenario === 'insufficient_funds') {
-      return ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Net↩', 'API↩', 'Declined']
-    }
+function getStepLabels(scenario: CombinedScenario): string[] {
+  if (scenario === 'debit-insufficient-funds') {
+    return ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Net↩', 'API↩', 'Declined']
+  }
+  if (scenario === 'debit-success') {
     return ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Merchant', 'ACH']
   }
-  if (scenario === 'declined') {
+  if (scenario === 'credit-declined') {
     return ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Net↩', 'API↩', 'Declined']
   }
-  if (scenario === 'fraud') {
+  if (scenario === 'credit-fraud') {
     return ['Browser', 'Stripe.js', 'API', 'Radar', 'API↩', 'Blocked']
   }
   return ['Browser', 'Stripe.js', 'API', 'Radar', 'Network', 'Bank', 'Merchant', 'Payout']
@@ -19,7 +19,6 @@ function getStepLabels(flowType: FlowType, scenario: Scenario): string[] {
 
 export function TimelineBar() {
   const {
-    flowType,
     scenario,
     status,
     activeStep,
@@ -36,9 +35,9 @@ export function TimelineBar() {
   const isRunning = status === 'running'
   const isDone = status === 'complete' || status === 'failed'
 
-  const stepNodeIds = getStepNodeIds(flowType, scenario)
-  const stepLabels = getStepLabels(flowType, scenario)
-  const returnPathStart = getReturnPathStart(flowType, scenario)
+  const stepNodeIds = getStepNodeIds(scenario)
+  const stepLabels = getStepLabels(scenario)
+  const returnPathStart = getReturnPathStart(scenario)
   const selectedStepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
 
   function handlePlayButton() {

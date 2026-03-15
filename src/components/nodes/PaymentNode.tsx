@@ -36,7 +36,7 @@ interface PaymentNodeProps {
 }
 
 export function PaymentNode({ data }: PaymentNodeProps) {
-  const { flowType, scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, status } = usePaymentStore()
+  const { scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, status } = usePaymentStore()
   const { label, sublabel, stepIndex, icon, timing } = data
 
   const isActive = activeStep === stepIndex
@@ -44,7 +44,7 @@ export function PaymentNode({ data }: PaymentNodeProps) {
   const isFailed = failedStep === stepIndex
   const isReturnCompleted = returnCompletedSteps.has(stepIndex)
 
-  const returnPathStart = getReturnPathStart(flowType, scenario)
+  const returnPathStart = getReturnPathStart(scenario)
   const isReturnPath = returnPathStart !== -1 && stepIndex >= returnPathStart
   const isReturnActive = isActive && isReturnPath
 
@@ -92,7 +92,7 @@ export function PaymentNode({ data }: PaymentNodeProps) {
   }
 
   const clickable = isCompleted || isActive || isFailed || isReturnCompleted
-  const stepNodeIds = getStepNodeIds(flowType, scenario)
+  const stepNodeIds = getStepNodeIds(scenario)
   const isFirst = stepIndex === 0
   const isLast = stepIndex === stepNodeIds.length - 1
 
