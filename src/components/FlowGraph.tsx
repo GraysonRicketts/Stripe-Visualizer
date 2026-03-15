@@ -19,12 +19,14 @@ import { NODES as DISPUTE_WON_NODES, EDGES as DISPUTE_WON_EDGES } from '../data/
 import { PaymentNode } from './nodes/PaymentNode'
 import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
 import { TimeChasmNode } from './nodes/TimeChasmNode'
+import { ScenarioContextNode } from './nodes/ScenarioContextNode'
 
 const nodeTypes: NodeTypes = {
   paymentNode: PaymentNode as unknown as NodeTypes[string],
   swimlaneBackground: SwimlaneBackgroundNode as unknown as NodeTypes[string],
   swimlaneHeader: SwimlaneHeaderNode as unknown as NodeTypes[string],
   timeChasmNode: TimeChasmNode as unknown as NodeTypes[string],
+  scenarioContextNode: ScenarioContextNode as unknown as NodeTypes[string],
 }
 
 const NODES_DICT: Record<CombinedScenario, Node[]> = {

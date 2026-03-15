@@ -3,57 +3,80 @@ import { NODE_X, Y, buildSwimlaneNodes } from '../swimlanes'
 
 export type { NodeData } from '../swimlanes'
 
-const BG_HEIGHT = 1820 // covers 10 Y-slots (0–9) + 2 time chasms + header + padding
+const BG_HEIGHT = 2160 // covers Y(0)–Y(11) + headers + padding
 
 const FLOW_NODES: Node[] = [
+  // ── Dispute origin context (non-interactive) ───────────────────────────────
+  {
+    id: 'context-node',
+    type: 'scenarioContextNode',
+    position: { x: NODE_X.customer, y: Y(0) },
+    zIndex: 0,
+    selectable: false,
+    draggable: false,
+    focusable: false,
+    data: { label: 'Continues from: Credit Card — Success', sublabel: 'payment captured, funds settled — cardholder files dispute' },
+  },
+  // ── Pre-dispute time gap (non-interactive) ─────────────────────────────────
+  {
+    id: 'time-chasm-0',
+    type: 'timeChasmNode',
+    position: { x: NODE_X.customer, y: Y(1) },
+    zIndex: 0,
+    selectable: false,
+    draggable: false,
+    focusable: false,
+    data: { label: 'Days to months later', sublabel: 'cardholder contacts their bank to dispute the charge' },
+  },
+  // ── Forward path ───────────────────────────────────────────────────────────
   {
     id: 'cardholder',
     type: 'paymentNode',
-    position: { x: NODE_X.customer, y: Y(0) },
+    position: { x: NODE_X.customer, y: Y(2) },
     data: { label: 'Cardholder', sublabel: 'Files dispute with issuing bank', stepIndex: 0, icon: 'flag' },
   },
   {
     id: 'issuer-dispute',
     type: 'paymentNode',
-    position: { x: NODE_X.bank, y: Y(1) },
+    position: { x: NODE_X.bank, y: Y(3) },
     data: { label: 'Issuing Bank', sublabel: 'Opens chargeback, freezes $49.00', stepIndex: 1, icon: 'bank', timing: '1–2 business days' },
   },
   {
     id: 'card-network-dispute',
     type: 'paymentNode',
-    position: { x: NODE_X.network, y: Y(2) },
+    position: { x: NODE_X.network, y: Y(4) },
     data: { label: 'Card Network', sublabel: 'Routes dispute to Stripe', stepIndex: 2, icon: 'network', timing: '~1 day' },
   },
   {
     id: 'stripe-dispute',
     type: 'paymentNode',
-    position: { x: NODE_X.stripe, y: Y(3) },
+    position: { x: NODE_X.stripe, y: Y(5) },
     data: { label: 'Stripe', sublabel: 'charge.dispute.created, $15 fee debited', stepIndex: 3, icon: 'server', timing: '~instant' },
   },
   // ── Time chasm 1: evidence window ─────────────────────────────────────────
   {
     id: 'evidence-submitted',
     type: 'paymentNode',
-    position: { x: NODE_X.stripe, y: Y(5) },
+    position: { x: NODE_X.stripe, y: Y(7) },
     data: { label: 'Evidence Submitted', sublabel: 'Compelling evidence via Stripe API', stepIndex: 4, icon: 'file-text', timing: 'within 7–21 days' },
   },
   {
     id: 'network-evidence',
     type: 'paymentNode',
-    position: { x: NODE_X.network, y: Y(6) },
+    position: { x: NODE_X.network, y: Y(8) },
     data: { label: 'Card Network', sublabel: 'Evidence forwarded to issuer', stepIndex: 5, icon: 'network', timing: '~1 day' },
   },
   {
     id: 'issuer-review',
     type: 'paymentNode',
-    position: { x: NODE_X.bank, y: Y(7) },
+    position: { x: NODE_X.bank, y: Y(9) },
     data: { label: 'Issuer Reviews', sublabel: 'Bank evaluates evidence submitted', stepIndex: 6, icon: 'bank', timing: '60–75 days' },
   },
   // ── Time chasm 2: review period ────────────────────────────────────────────
   {
     id: 'dispute-won',
     type: 'paymentNode',
-    position: { x: NODE_X.stripe, y: Y(9) },
+    position: { x: NODE_X.stripe, y: Y(11) },
     data: { label: 'Dispute Won', sublabel: 'charge.dispute.closed — status: won', stepIndex: 7, icon: 'server', timing: '~instant' },
   },
 ]
@@ -61,7 +84,7 @@ const FLOW_NODES: Node[] = [
 const TIME_CHASM_1: Node = {
   id: 'time-chasm-1',
   type: 'timeChasmNode',
-  position: { x: NODE_X.stripe, y: Y(4) },
+  position: { x: NODE_X.stripe, y: Y(6) },
   zIndex: 0,
   selectable: false,
   draggable: false,
@@ -72,7 +95,7 @@ const TIME_CHASM_1: Node = {
 const TIME_CHASM_2: Node = {
   id: 'time-chasm-2',
   type: 'timeChasmNode',
-  position: { x: NODE_X.stripe, y: Y(8) },
+  position: { x: NODE_X.stripe, y: Y(10) },
   zIndex: 0,
   selectable: false,
   draggable: false,
@@ -88,13 +111,14 @@ export const NODES: Node[] = [
 ]
 
 export const EDGES: Edge[] = [
-  { id: 'e0-1',   source: 'cardholder',          target: 'issuer-dispute',       label: 'disputes payment' },
-  { id: 'e1-2',   source: 'issuer-dispute',       target: 'card-network-dispute', label: 'chargeback created' },
-  { id: 'e2-3',   source: 'card-network-dispute', target: 'stripe-dispute',       label: 'dispute routed' },
-  { id: 'e3-tc1', source: 'stripe-dispute',       target: 'time-chasm-1',         label: 'merchant notified' },
-  { id: 'etc1-4', source: 'time-chasm-1',         target: 'evidence-submitted',   label: 'evidence submitted' },
-  { id: 'e4-5',   source: 'evidence-submitted',   target: 'network-evidence',     label: 'evidence packet' },
-  { id: 'e5-6',   source: 'network-evidence',     target: 'issuer-review',        label: 'to issuing bank' },
-  { id: 'e6-tc2', source: 'issuer-review',        target: 'time-chasm-2',         label: 'under review' },
-  { id: 'etc2-7', source: 'time-chasm-2',         target: 'dispute-won',          label: 'decision reached' },
+  { id: 'e-ctx-tc0', source: 'context-node',         target: 'time-chasm-0',         label: '' },
+  { id: 'e0-1',      source: 'cardholder',            target: 'issuer-dispute',        label: 'disputes payment' },
+  { id: 'e1-2',      source: 'issuer-dispute',        target: 'card-network-dispute',  label: 'chargeback created' },
+  { id: 'e2-3',      source: 'card-network-dispute',  target: 'stripe-dispute',        label: 'dispute routed' },
+  { id: 'e3-tc1',    source: 'stripe-dispute',        target: 'time-chasm-1',          label: 'merchant notified' },
+  { id: 'etc1-4',    source: 'time-chasm-1',          target: 'evidence-submitted',    label: 'evidence submitted' },
+  { id: 'e4-5',      source: 'evidence-submitted',    target: 'network-evidence',      label: 'evidence packet' },
+  { id: 'e5-6',      source: 'network-evidence',      target: 'issuer-review',         label: 'to issuing bank' },
+  { id: 'e6-tc2',    source: 'issuer-review',         target: 'time-chasm-2',          label: 'under review' },
+  { id: 'etc2-7',    source: 'time-chasm-2',          target: 'dispute-won',           label: 'decision reached' },
 ]
