@@ -12,6 +12,8 @@ import {
   Banknote,
   Lock,
   Wallet,
+  Flag,
+  FileText,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -28,6 +30,8 @@ const ICONS: Record<string, React.ElementType> = {
   payout: Banknote,
   lock: Lock,
   wallet: Wallet,
+  flag: Flag,
+  'file-text': FileText,
 }
 
 interface PaymentNodeProps {

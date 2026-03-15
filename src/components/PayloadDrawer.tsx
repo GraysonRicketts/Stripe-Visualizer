@@ -3,6 +3,7 @@ import { X, Code2, Clock } from 'lucide-react'
 import { usePaymentStore, getStepNodeIds, toCreditScenario, toDebitScenario } from '../store/paymentStore'
 import { getPayload as getCreditPayload } from '../data/credit-success/payloads'
 import { getPayload as getDebitPayload } from '../data/debit-success/payloads'
+import { getPayload as getDisputePayload } from '../data/credit-dispute-won/payloads'
 
 function formatValue(value: unknown, depth = 0): string {
   if (value === null) return 'null'
@@ -44,9 +45,11 @@ export function PayloadDrawer() {
   const stepNodeIds = getStepNodeIds(scenario)
   const stepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
   const payload = stepIndex >= 0
-    ? scenario.startsWith('credit-')
-      ? getCreditPayload(stepIndex, toCreditScenario(scenario))
-      : getDebitPayload(stepIndex, toDebitScenario(scenario))
+    ? scenario.startsWith('credit-dispute-')
+      ? getDisputePayload(stepIndex, scenario === 'credit-dispute-won' ? 'won' : 'lost')
+      : scenario.startsWith('credit-')
+        ? getCreditPayload(stepIndex, toCreditScenario(scenario))
+        : getDebitPayload(stepIndex, toDebitScenario(scenario))
     : null
 
   const formatted = payload

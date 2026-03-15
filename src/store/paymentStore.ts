@@ -8,6 +8,8 @@ export type CombinedScenario =
   | 'credit-fraud'
   | 'debit-success'
   | 'debit-insufficient-funds'
+  | 'credit-dispute-won'
+  | 'credit-dispute-lost'
 
 export type PaymentStatus = 'idle' | 'running' | 'complete' | 'failed'
 
@@ -61,6 +63,8 @@ export const STEP_NODE_IDS: Record<CombinedScenario, string[]> = {
   'credit-fraud':              ['customer', 'stripe-js', 'stripe-api', 'radar', 'stripe-api-return', 'customer-return'],
   'debit-success':             ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
   'debit-insufficient-funds':  ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'debit-network-return', 'stripe-api-return', 'customer-return'],
+  'credit-dispute-won':        ['cardholder', 'issuer-dispute', 'card-network-dispute', 'stripe-dispute', 'evidence-submitted', 'network-evidence', 'issuer-review', 'dispute-won'],
+  'credit-dispute-lost':       ['cardholder', 'issuer-dispute', 'card-network-dispute', 'stripe-dispute', 'evidence-submitted', 'network-evidence', 'issuer-review', 'dispute-lost-stripe', 'funds-retained'],
 }
 
 type EventDef = { label: string; sublabel: string }
@@ -115,6 +119,31 @@ const DEBIT_INSUFFICIENT_FUNDS_EVENTS: EventDef[] = [
   { label: 'payment_intent.payment_failed', sublabel: 'status: requires_payment_method, last_error: insufficient_funds' },
 ]
 
+// ── Dispute events ────────────────────────────────────────────────────────────
+
+const DISPUTE_WON_EVENTS: EventDef[] = [
+  { label: 'charge.dispute.created',           sublabel: 'id: dp_xxx, reason: fraudulent, amount: 4900' },
+  { label: 'charge.dispute.funds_withdrawn',   sublabel: 'Disputed funds + $15 fee debited from balance' },
+  { label: 'charge.dispute.updated',           sublabel: 'status: needs_response, due_by: T+21 days' },
+  { label: 'charge.dispute.evidence_submitted', sublabel: 'submission_count: 1, has_evidence: true' },
+  { label: 'charge.dispute.updated',           sublabel: 'status: under_review, evidence forwarded to issuer' },
+  { label: 'charge.dispute.updated',           sublabel: 'Issuer review in progress (60–75 days)' },
+  { label: 'charge.dispute.updated',           sublabel: 'Issuer review in progress (60–75 days)' },
+  { label: 'charge.dispute.closed',            sublabel: 'status: won, funds returned to balance' },
+]
+
+const DISPUTE_LOST_EVENTS: EventDef[] = [
+  { label: 'charge.dispute.created',           sublabel: 'id: dp_xxx, reason: fraudulent, amount: 4900' },
+  { label: 'charge.dispute.funds_withdrawn',   sublabel: 'Disputed funds + $15 fee debited from balance' },
+  { label: 'charge.dispute.updated',           sublabel: 'status: needs_response, due_by: T+21 days' },
+  { label: 'charge.dispute.evidence_submitted', sublabel: 'submission_count: 1, has_evidence: true' },
+  { label: 'charge.dispute.updated',           sublabel: 'status: under_review, evidence forwarded to issuer' },
+  { label: 'charge.dispute.updated',           sublabel: 'Issuer review in progress (60–75 days)' },
+  { label: 'charge.dispute.closed',            sublabel: 'status: lost, funds kept by cardholder' },
+  { label: 'charge.dispute.funds_reinstated',  sublabel: 'No funds reinstated — decision is final' },
+  { label: 'balance.updated',                  sublabel: 'Permanent loss: $49.00 + $15 dispute fee' },
+]
+
 // ── Scenario config ───────────────────────────────────────────────────────────
 
 const SCENARIO_CONFIG: Record<CombinedScenario, { failStep: number; returnPathStart: number; events: EventDef[] }> = {
@@ -123,6 +152,8 @@ const SCENARIO_CONFIG: Record<CombinedScenario, { failStep: number; returnPathSt
   'credit-fraud':              { failStep: 3,  returnPathStart: 4,  events: CREDIT_FRAUD_EVENTS },
   'debit-success':             { failStep: -1, returnPathStart: -1, events: DEBIT_SUCCESS_EVENTS },
   'debit-insufficient-funds':  { failStep: 6,  returnPathStart: 7,  events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
+  'credit-dispute-won':        { failStep: -1, returnPathStart: -1, events: DISPUTE_WON_EVENTS },
+  'credit-dispute-lost':       { failStep: 6,  returnPathStart: 7,  events: DISPUTE_LOST_EVENTS },
 }
 
 export function getStepNodeIds(scenario: CombinedScenario): string[] {
