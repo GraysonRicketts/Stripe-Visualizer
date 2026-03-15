@@ -14,6 +14,7 @@ import { NODES as CREDIT_SUCCESS_NODES, EDGES as CREDIT_SUCCESS_EDGES } from '..
 import { NODES as CREDIT_DECLINED_NODES, EDGES as CREDIT_DECLINED_EDGES } from '../data/credit-declined/layout'
 import { NODES as CREDIT_FRAUD_NODES, EDGES as CREDIT_FRAUD_EDGES } from '../data/credit-fraud/layout'
 import { NODES as DEBIT_SUCCESS_NODES, EDGES as DEBIT_SUCCESS_EDGES } from '../data/debit-success/layout'
+import { NODES as DEBIT_INSUFFICIENT_FUNDS_NODES, EDGES as DEBIT_INSUFFICIENT_FUNDS_EDGES } from '../data/debit-insufficient-funds/layout'
 import { PaymentNode } from './nodes/PaymentNode'
 import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
 import { TimeChasmNode } from './nodes/TimeChasmNode'
@@ -33,7 +34,7 @@ const NODES_DICT: { credit: Record<CreditScenario, Node[]>, debit: Record<DebitS
   },
   debit: {
     success: DEBIT_SUCCESS_NODES,
-    insufficient_funds: DEBIT_SUCCESS_NODES,
+    insufficient_funds: DEBIT_INSUFFICIENT_FUNDS_NODES,
   },
 }
 
@@ -45,7 +46,7 @@ const EDGES_DICT: { credit: Record<CreditScenario, Edge[]>, debit: Record<DebitS
   },
   debit: {
     success: DEBIT_SUCCESS_EDGES,
-    insufficient_funds: DEBIT_SUCCESS_EDGES,
+    insufficient_funds: DEBIT_INSUFFICIENT_FUNDS_EDGES,
   },
 }
 

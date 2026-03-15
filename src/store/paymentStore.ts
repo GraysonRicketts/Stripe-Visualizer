@@ -48,7 +48,7 @@ export const STEP_NODE_IDS: { credit: Record<CreditScenario, string[]>, debit: R
   },
   debit: {
     success: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
-    insufficient_funds: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'merchant', 'ach-settlement'],
+    insufficient_funds: ['customer', 'stripe-js', 'stripe-api', 'radar', 'debit-network', 'pin-verify', 'balance-check', 'debit-network-return', 'stripe-api-return', 'customer-return'],
   },
 }
 
@@ -110,11 +110,14 @@ const DEBIT_SUCCESS_EVENTS: EventDef[] = [
 const DEBIT_INSUFFICIENT_FUNDS_EVENTS: EventDef[] = [
   ...DEBIT_SUCCESS_EVENTS.slice(0, 6),
   { label: 'charge.failed', sublabel: 'failure_code: insufficient_funds, bank: 51' },
+  { label: 'charge.updated', sublabel: 'Decline response routed back via Star network' },
+  { label: 'charge.updated', sublabel: 'Decline forwarded from Stripe API to Stripe.js' },
+  { label: 'payment_intent.payment_failed', sublabel: 'status: requires_payment_method, last_error: insufficient_funds' },
 ]
 
 const DEBIT_SCENARIO_CONFIG: Record<DebitScenario, { failStep: number; returnPathStart: number; events: EventDef[] }> = {
   success:             { failStep: -1, returnPathStart: -1, events: DEBIT_SUCCESS_EVENTS },
-  insufficient_funds:  { failStep: 6,  returnPathStart: -1, events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
+  insufficient_funds:  { failStep: 6,  returnPathStart: 7,  events: DEBIT_INSUFFICIENT_FUNDS_EVENTS },
 }
 
 export function getReturnPathStart(flowType: FlowType, scenario: Scenario): number {

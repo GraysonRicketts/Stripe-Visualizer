@@ -3,6 +3,9 @@ import { usePaymentStore, getStepNodeIds, getReturnPathStart, type FlowType, typ
 
 function getStepLabels(flowType: FlowType, scenario: Scenario): string[] {
   if (flowType === 'debit') {
+    if (scenario === 'insufficient_funds') {
+      return ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Net↩', 'API↩', 'Declined']
+    }
     return ['Browser', 'Stripe.js', 'API', 'Radar', 'Debit Net', 'PIN', 'Balance', 'Merchant', 'ACH']
   }
   if (scenario === 'declined') {

@@ -218,6 +218,59 @@ const INSUFFICIENT_FUNDS_PAYLOADS: StepPayload[] = [
       },
     },
   },
+  {
+    title: 'Decline Response — Debit Network',
+    object: 'issuing.authorization',
+    timing: '~200–500ms',
+    description: "The Star debit network receives the decline response from the issuing bank and routes it back toward Stripe. The decline code 51 (insufficient funds) travels through the same PIN debit ISO 8583 channel.",
+    data: {
+      network: 'star',
+      routing_type: 'pin_debit',
+      request_id: 'AUTH-1OxK2L-STAR-DEBIT',
+      status: 'declined',
+      decline_code: '51',
+      response_code: 'declined_by_network',
+      original_request: {
+        amount: 4900,
+        currency: 'usd',
+        card: { brand: 'visa', last4: '5556', funding: 'debit' },
+      },
+    },
+  },
+  {
+    title: 'Decline Forwarded — Stripe API',
+    object: 'payment_intent',
+    timing: '~instant',
+    description: "Stripe receives the network decline, updates the Charge and PaymentIntent, and fires a charge.failed webhook to your backend. The PaymentIntent status reverts to 'requires_payment_method'.",
+    data: {
+      id: 'pi_3OxK2LBLpOGa8XCy0DEBIT1',
+      object: 'payment_intent',
+      status: 'requires_payment_method',
+      last_payment_error: {
+        code: 'card_declined',
+        decline_code: 'insufficient_funds',
+        message: 'Your card has insufficient funds.',
+        type: 'card_error',
+        charge: 'ch_3OxK2LBLpOGa8XCy0DEBIT2',
+      },
+    },
+  },
+  {
+    title: 'Insufficient Funds — Customer Notified',
+    object: 'error',
+    timing: '~instant',
+    description: "Stripe.js rejects the confirmCardPayment() promise with an insufficient funds error. Your frontend receives a structured error object and can prompt the customer to use a different payment method or top up their account.",
+    data: {
+      type: 'card_error',
+      code: 'card_declined',
+      decline_code: 'insufficient_funds',
+      message: 'Your card has insufficient funds.',
+      payment_intent: {
+        id: 'pi_3OxK2LBLpOGa8XCy0DEBIT1',
+        status: 'requires_payment_method',
+      },
+    },
+  },
 ]
 
 export function getPayload(stepIndex: number, scenario: DebitScenario): StepPayload | null {
