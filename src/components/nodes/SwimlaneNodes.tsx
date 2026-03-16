@@ -35,12 +35,12 @@ export function SwimlaneHeaderNode({ data }: { data: SwimlaneHeaderData }) {
         backgroundColor: data.color,
         border: `1px solid ${data.borderColor}`,
         borderRadius: 8,
-        padding: '6px 14px',
+        padding: '8px 16px',
         textAlign: 'center',
         pointerEvents: 'none',
       }}
     >
-      <span style={{ color: data.borderColor, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
+      <span style={{ color: data.borderColor, fontSize: 18, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
         {data.label}
       </span>
     </div>

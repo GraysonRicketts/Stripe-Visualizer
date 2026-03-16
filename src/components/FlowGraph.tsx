@@ -48,7 +48,7 @@ const EDGES_DICT: Record<CombinedScenario, Edge[]> = {
 }
 
 export function FlowGraph() {
-  const { scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, selectNode } = usePaymentStore()
+  const { scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, status, selectNode } = usePaymentStore()
 
   const allNodes = NODES_DICT[scenario]
   const baseEdges = EDGES_DICT[scenario]
@@ -131,11 +131,10 @@ export function FlowGraph() {
         fitViewOptions={{ padding: 0.08 }}
         onNodeClick={(_, node) => {
           if (node.type !== 'paymentNode') return
+          if (status === 'running') return
           const stepIndex = stepNodeIds.indexOf(node.id)
           if (stepIndex === -1) return
-          if (completedSteps.has(stepIndex) || activeStep === stepIndex || failedStep === stepIndex || returnCompletedSteps.has(stepIndex)) {
-            selectNode(node.id)
-          }
+          selectNode(node.id)
         }}
         nodesDraggable={false}
         nodesConnectable={false}

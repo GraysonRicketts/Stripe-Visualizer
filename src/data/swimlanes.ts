@@ -16,7 +16,7 @@ export const NODE_X = { customer: 30, stripe: 350, network: 670, bank: 990 }
 export const Y = (step: number) => step * 160
 
 const LANE_STYLE = { color: '#0d0e1a', borderColor: '#1e2235' }
-const HEADER_COLOR = '#475569'
+const HEADER_COLOR = '#d8dde4'
 const BG_Y = -100
 
 const NON_INTERACTIVE = {
