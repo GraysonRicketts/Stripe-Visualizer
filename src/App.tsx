@@ -1,9 +1,14 @@
+import { useState } from 'react'
+import { AboutModal } from './components/AboutModal'
 import { CheckoutPanel } from './components/CheckoutPanel'
 import { FlowGraph } from './components/FlowGraph'
 import { TimelineBar } from './components/TimelineBar'
 
 export default function App() {
+  const [showAbout, setShowAbout] = useState(true)
+
   return (
+    <>
     <div className="flex flex-col h-screen bg-[#0a0b14] overflow-hidden">
       {/* Top bar */}
       <div className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1b2e] flex-shrink-0">
@@ -35,5 +40,12 @@ export default function App() {
         </div>
       </div>
     </div>
+
+    <AboutModal
+      open={showAbout}
+      onClose={() => setShowAbout(false)}
+      onOpen={() => setShowAbout(true)}
+    />
+    </>
   )
 }
