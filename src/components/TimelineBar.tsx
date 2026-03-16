@@ -80,7 +80,7 @@ export function TimelineBar() {
         transition: { duration: 1.55, delay: 0.06, ease: 'easeInOut' },
       }).then(() => shineControls.set({ x: '-100%' }))
 
-    }, 15000)
+    }, 5000)
     return () => clearInterval(id)
   }, [isRunning, isDone, btnControls, shineControls])
 
@@ -168,7 +168,7 @@ export function TimelineBar() {
         <motion.button
           animate={btnControls}
           onClick={handlePlayButton}
-          className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+          className={`relative overflow-hidden flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold transition-colors duration-200 ${
             isRunning
               ? 'bg-[#1a1b2e] border border-[#2a2d4a] text-slate-300 hover:text-white hover:border-slate-500'
               : isDone
@@ -196,17 +196,17 @@ export function TimelineBar() {
           <span className="relative z-10 flex items-center gap-2">
             {isRunning ? (
               <>
-                <Square className="w-3.5 h-3.5 fill-current" />
+                <Square className="w-4 h-4 fill-current" />
                 Stop
               </>
             ) : isDone ? (
               <>
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4" />
                 Reset
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
                 Play
               </>
             )}

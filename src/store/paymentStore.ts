@@ -50,7 +50,7 @@ interface PaymentStore {
   selectNode: (id: string | null) => void
 }
 
-const STEP_DURATION = 900  // ms each step takes to "process"
+const STEP_DURATION = 4000  // ms each step takes to "process"
 const STEP_PAUSE = 400     // ms between steps
 
 export const STEP_NODE_IDS: Record<CombinedScenario, string[]> = {

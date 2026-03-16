@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   ReactFlow,
   Background,
   BackgroundVariant,
   MarkerType,
+  useReactFlow,
   type NodeTypes,
   type Edge,
   type Node,
@@ -47,6 +48,31 @@ const EDGES_DICT: Record<CombinedScenario, Edge[]> = {
   'debit-success':             DEBIT_SUCCESS_EDGES,
   'debit-insufficient-funds':  DEBIT_INSUFFICIENT_FUNDS_EDGES,
   'credit-dispute-won':        DISPUTE_WON_EDGES,
+}
+
+function AutoPanController({ scenario }: { scenario: CombinedScenario }) {
+  const { setCenter, fitView, getNode } = useReactFlow()
+  const activeStep = usePaymentStore(s => s.activeStep)
+  const status = usePaymentStore(s => s.status)
+
+  useEffect(() => {
+    if (status !== 'running' || activeStep < 0) return
+    const nodeId = getStepNodeIds(scenario)[activeStep]
+    if (!nodeId) return
+    const node = getNode(nodeId)
+    if (!node) return
+    const w = node.measured?.width ?? 200
+    const h = node.measured?.height ?? 80
+    setCenter(node.position.x + w / 2, node.position.y + h / 2, { zoom: 1.2, duration: 600 })
+  }, [activeStep, status, scenario])
+
+  useEffect(() => {
+    if (status === 'running') return
+    const t = setTimeout(() => fitView({ duration: 700, padding: 0.08 }), 400)
+    return () => clearTimeout(t)
+  }, [status])
+
+  return null
 }
 
 export function FlowGraph() {
@@ -163,6 +189,7 @@ export function FlowGraph() {
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
+        <AutoPanController scenario={scenario} />
         <Background
           variant={BackgroundVariant.Dots}
           gap={24}
