@@ -20,6 +20,7 @@ import { PaymentNode } from './nodes/PaymentNode'
 import { SwimlaneBackgroundNode, SwimlaneHeaderNode } from './nodes/SwimlaneNodes'
 import { TimeChasmNode } from './nodes/TimeChasmNode'
 import { ScenarioContextNode } from './nodes/ScenarioContextNode'
+import { PayloadCardNode } from './nodes/PayloadCardNode'
 
 const nodeTypes: NodeTypes = {
   paymentNode: PaymentNode as unknown as NodeTypes[string],
@@ -27,6 +28,7 @@ const nodeTypes: NodeTypes = {
   swimlaneHeader: SwimlaneHeaderNode as unknown as NodeTypes[string],
   timeChasmNode: TimeChasmNode as unknown as NodeTypes[string],
   scenarioContextNode: ScenarioContextNode as unknown as NodeTypes[string],
+  payloadCardNode: PayloadCardNode as unknown as NodeTypes[string],
 }
 
 const NODES_DICT: Record<CombinedScenario, Node[]> = {
@@ -48,12 +50,28 @@ const EDGES_DICT: Record<CombinedScenario, Edge[]> = {
 }
 
 export function FlowGraph() {
-  const { scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, status, selectNode } = usePaymentStore()
+  const { scenario, activeStep, completedSteps, returnCompletedSteps, failedStep, status, selectNode, selectedNodeId } = usePaymentStore()
 
   const allNodes = NODES_DICT[scenario]
   const baseEdges = EDGES_DICT[scenario]
   const stepNodeIds = getStepNodeIds(scenario)
   const returnPathStart = getReturnPathStart(scenario)
+
+  // Inject a phantom card node in graph-space next to the selected node
+  const selectedNode = selectedNodeId ? allNodes.find(n => n.id === selectedNodeId) : null
+  const nodes: Node[] = useMemo(() => {
+    if (!selectedNode) return allNodes
+    const cardNode: Node = {
+      id: '__payload-card__',
+      type: 'payloadCardNode',
+      position: { x: selectedNode.position.x + 276, y: selectedNode.position.y },
+      data: {},
+      draggable: false,
+      selectable: false,
+      focusable: false,
+    }
+    return [...allNodes, cardNode]
+  }, [allNodes, selectedNode])
 
   const edges = useMemo<Edge[]>(() => {
     return baseEdges.map((edge) => {
@@ -124,7 +142,7 @@ export function FlowGraph() {
   return (
     <div className="w-full h-full">
       <ReactFlow
-        nodes={allNodes}
+        nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         fitView

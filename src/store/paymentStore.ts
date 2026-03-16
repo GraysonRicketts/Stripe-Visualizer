@@ -41,7 +41,6 @@ interface PaymentStore {
   status: PaymentStatus
   selectedNodeId: string | null
   events: WebhookEvent[]
-  drawerOpen: boolean
 
   setScenario: (s: CombinedScenario) => void
   play: (fromStep: number) => void
@@ -49,8 +48,6 @@ interface PaymentStore {
   jumpToStep: (step: number) => void
   reset: () => void
   selectNode: (id: string | null) => void
-  openDrawer: () => void
-  closeDrawer: () => void
 }
 
 const STEP_DURATION = 900  // ms each step takes to "process"
@@ -168,8 +165,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
   status: 'idle',
   selectedNodeId: null,
   events: [],
-  drawerOpen: true,
-
   setScenario: (scenario) => {
     const { status } = get()
     if (status === 'running') return
@@ -183,7 +178,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
       status: 'idle',
       selectedNodeId: null,
       events: [],
-      drawerOpen: true,
     })
   },
 
@@ -197,7 +191,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
       status: 'idle',
       selectedNodeId: null,
       events: [],
-      drawerOpen: true,
     })
   },
 
@@ -233,7 +226,6 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
       returnCompletedSteps,
       failedStep,
       selectedNodeId: nodeIds[step],
-      drawerOpen: true,
     })
   },
 
@@ -312,7 +304,5 @@ export const usePaymentStore = create<PaymentStore>((set, get) => ({
     activeTimeouts.push(t0)
   },
 
-  selectNode: (id) => set({ selectedNodeId: id, drawerOpen: id !== null }),
-  openDrawer: () => set({ drawerOpen: true }),
-  closeDrawer: () => set({ drawerOpen: false }),
+  selectNode: (id) => set({ selectedNodeId: id }),
 }))

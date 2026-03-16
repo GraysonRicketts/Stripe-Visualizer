@@ -1,5 +1,5 @@
 import { Handle, Position } from '@xyflow/react'
-import { Code2, ChevronRight } from 'lucide-react'
+import { Code2 } from 'lucide-react'
 import { usePaymentStore, getStepNodeIds, toCreditScenario, toDebitScenario } from '../../store/paymentStore'
 import { getPayload as getCreditPayload } from '../../data/credit-success/payloads'
 import { getPayload as getDebitPayload } from '../../data/debit-success/payloads'
@@ -17,7 +17,7 @@ function compactEntries(data: Record<string, unknown>): Array<{ key: string; val
 }
 
 export function PayloadPreviewNode() {
-  const { selectedNodeId, scenario, completedSteps, activeStep, failedStep, openDrawer } = usePaymentStore()
+  const { selectedNodeId, scenario, completedSteps, activeStep, failedStep } = usePaymentStore()
 
   const stepNodeIds = getStepNodeIds(scenario)
   const stepIndex = selectedNodeId ? stepNodeIds.indexOf(selectedNodeId) : -1
@@ -73,14 +73,6 @@ export function PayloadPreviewNode() {
             </pre>
           </div>
 
-          {/* View full button */}
-          <button
-            onClick={openDrawer}
-            className="w-full px-4 py-2.5 flex items-center justify-between text-xs text-[#635bff] hover:bg-[#1a1b2e] transition-colors cursor-pointer"
-          >
-            <span>View full payload</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
         </>
       ) : (
         <div className="px-4 py-6 flex flex-col items-center gap-2 text-center">

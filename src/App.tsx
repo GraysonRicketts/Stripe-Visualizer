@@ -1,6 +1,5 @@
 import { CheckoutPanel } from './components/CheckoutPanel'
 import { FlowGraph } from './components/FlowGraph'
-import { PayloadDrawer } from './components/PayloadDrawer'
 import { TimelineBar } from './components/TimelineBar'
 
 export default function App() {
@@ -30,10 +29,9 @@ export default function App() {
           <CheckoutPanel />
         </div>
 
-        {/* Right: Flow Graph + Payload Drawer */}
+        {/* Right: Flow Graph */}
         <div className="flex-1 relative min-w-0">
           <FlowGraph />
-          <PayloadDrawer />
         </div>
       </div>
     </div>
