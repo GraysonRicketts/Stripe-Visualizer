@@ -1,6 +1,8 @@
-# Stripe Payment Flow Visualizer
+# [Stripe Payment Flow Visualizer](https://graysonricketts.github.io/stripe-visualizer/)
 
 An interactive visualization of Stripe's payment processing flow, built with React, React Flow, and Tailwind CSS.
+
+See it live at: https://graysonricketts.github.io/stripe-visualizer/
 
 ## Prerequisites
 
